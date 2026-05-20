@@ -8,6 +8,7 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
+.expo-tmp-export*/
 
 # Native
 .kotlin/
@@ -32,6 +33,13 @@ yarn-error.*
 
 # local env files
 .env*.local
+
+# coordinador LAN
+sync-server/coordinador.db
+sync-server/coordinador.db-shm
+sync-server/coordinador.db-wal
+sync-server/coordinador.json
+sync-server/node_modules
 
 # typescript
 *.tsbuildinfo

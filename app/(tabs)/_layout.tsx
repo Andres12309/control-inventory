@@ -3,33 +3,59 @@ import React from 'react';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { InventarioColors } from '@/constants/inventario-theme';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
+        tabBarActiveTintColor: InventarioColors.accent,
+        tabBarInactiveTintColor: InventarioColors.textMuted,
+        tabBarStyle: {
+          backgroundColor: InventarioColors.surface,
+          borderTopColor: InventarioColors.border,
+        },
+        headerStyle: { backgroundColor: InventarioColors.surface },
+        headerTintColor: InventarioColors.text,
+        headerShown: true,
         tabBarButton: HapticTab,
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Contar',
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="square.and.pencil" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="inventario"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Inventario',
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="tray.full" color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="catalogo"
+        options={{
+          title: 'Catálogo',
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="list.bullet" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="familias"
+        options={{
+          title: 'Familias',
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="folder.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="ajustes"
+        options={{
+          title: 'Más',
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="gearshape.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen name="explore" options={{ href: null }} />
     </Tabs>
   );
 }

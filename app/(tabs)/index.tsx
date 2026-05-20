@@ -1,98 +1,282 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useSQLiteContext } from 'expo-sqlite';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { InventarioActivoBanner } from '@/components/inventario/InventarioActivoBanner';
+import { ProductoCard } from '@/components/inventario/ProductoCard';
+import { InventarioColors } from '@/constants/inventario-theme';
+import { useEliminarProducto } from '@/hooks/use-eliminar-producto';
+import { useInventarioActivo } from '@/hooks/use-inventario-activo';
+import { normalizeCodpro, normalizeDesproInput } from '@/lib/codpro';
+import { getProducto, getResumenInventario, searchProductos } from '@/lib/db/repository';
+import type { ProductoConConteo } from '@/lib/types';
 
-export default function HomeScreen() {
+const MIN_BUSQUEDA = 1;
+const LIMITE_RESULTADOS = 60;
+
+export default function ContarScreen() {
+  const db = useSQLiteContext();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+
+  const [query, setQuery] = useState('');
+  const [resumen, setResumen] = useState({ totalProductos: 0, contados: 0, pendientes: 0 });
+  const [resultados, setResultados] = useState<ProductoConConteo[]>([]);
+  const [buscando, setBuscando] = useState(false);
+  const [existeCodigoExacto, setExisteCodigoExacto] = useState<boolean | null>(null);
+
+  const termino = query.trim();
+  const codigoExacto = normalizeCodpro(termino);
+  const hayBusqueda = termino.length >= MIN_BUSQUEDA;
+
+  const cargarResumen = useCallback(async () => {
+    setResumen(await getResumenInventario(db));
+  }, [db]);
+
+  const ejecutarBusqueda = useCallback(async () => {
+    const q = termino;
+    if (q.length < MIN_BUSQUEDA) {
+      setResultados([]);
+      setExisteCodigoExacto(null);
+      setBuscando(false);
+      return;
+    }
+    setBuscando(true);
+    try {
+      const [lista, exacto] = await Promise.all([
+        searchProductos(db, q, null, 'todos', LIMITE_RESULTADOS),
+        getProducto(db, codigoExacto),
+      ]);
+      setResultados(lista);
+      setExisteCodigoExacto(!!exacto);
+    } finally {
+      setBuscando(false);
+    }
+  }, [db, termino, codigoExacto]);
+
+  useFocusEffect(
+    useCallback(() => {
+      cargarResumen();
+    }, [cargarResumen])
+  );
+
+  useEffect(() => {
+    if (!hayBusqueda) {
+      setResultados([]);
+      setExisteCodigoExacto(null);
+      return;
+    }
+    const t = setTimeout(() => ejecutarBusqueda(), 300);
+    return () => clearTimeout(t);
+  }, [hayBusqueda, ejecutarBusqueda]);
+
+  const abrirNuevo = (prefijo?: string) => {
+    router.push({
+      pathname: '/conteo/[codpro]',
+      params: prefijo
+        ? { codpro: 'nuevo', prefijo: normalizeCodpro(prefijo) }
+        : { codpro: 'nuevo' },
+    });
+  };
+
+  const abrirConteo = (codpro: string) => {
+    router.push({ pathname: '/conteo/[codpro]', params: { codpro: normalizeCodpro(codpro) } });
+  };
+
+  const irAccionPrincipal = () => {
+    if (!codigoExacto) {
+      abrirNuevo();
+      return;
+    }
+    if (existeCodigoExacto) abrirConteo(codigoExacto);
+    else abrirNuevo(codigoExacto);
+  };
+
+  const refrescarBusqueda = useCallback(async () => {
+    await cargarResumen();
+    await ejecutarBusqueda();
+  }, [cargarResumen, ejecutarBusqueda]);
+
+  const { confirmarEliminar } = useEliminarProducto(refrescarBusqueda);
+  const { activo, resumenVentas } = useInventarioActivo();
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+      {/* Cabecera fija: el TextInput no se desmonta al buscar */}
+      <View style={styles.top}>
+        <View style={styles.resumenMini}>
+          <Text style={styles.resumenText}>
+            {resumen.contados} contados · {resumen.pendientes} pendientes · {resumen.totalProductos}{' '}
+            total
+          </Text>
+        </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        <InventarioActivoBanner activo={activo} resumenVentas={resumenVentas} />
+
+        <Pressable style={styles.primaryBtn} onPress={() => abrirNuevo()}>
+          <Text style={styles.primaryBtnText}>Ingresar código y contar</Text>
+          <Text style={styles.primaryBtnHint}>Sin buscar — código del cartón directo</Text>
+        </Pressable>
+
+        <Text style={styles.searchLabel}>Búsqueda global</Text>
+        <TextInput
+          style={styles.search}
+          placeholder="CÓDIGO O DESCRIPCIÓN..."
+          placeholderTextColor={InventarioColors.textMuted}
+          value={query}
+          onChangeText={(t) => setQuery(normalizeDesproInput(t))}
+          autoCapitalize="characters"
+          autoCorrect={false}
+          blurOnSubmit={false}
+          returnKeyType="search"
+          onSubmitEditing={irAccionPrincipal}
+        />
+
+        {!hayBusqueda ? (
+          <Text style={styles.hint}>Escribe para buscar en todo el catálogo por código o descripción</Text>
+        ) : null}
+
+        {hayBusqueda && codigoExacto ? (
+          <Pressable
+            style={styles.accionCodigo}
+            onPress={irAccionPrincipal}
+            disabled={buscando}>
+            <Text style={styles.accionCodigoText}>
+              {buscando
+                ? 'Comprobando código...'
+                : existeCodigoExacto
+                  ? `Contar ${codigoExacto}`
+                  : `+ Crear y contar ${codigoExacto}`}
+            </Text>
+            {!buscando && !existeCodigoExacto && resultados.length > 0 ? (
+              <Text style={styles.accionCodigoHint}>
+                También hay coincidencias por descripción abajo
+              </Text>
+            ) : null}
+          </Pressable>
+        ) : null}
+
+        <Text style={styles.hintLongPress}>Mantén pulsado un resultado para eliminarlo</Text>
+
+        {hayBusqueda ? (
+          <Text style={styles.resultadosTitulo}>
+            {buscando
+              ? 'Buscando...'
+              : `${resultados.length} coincidencia${resultados.length === 1 ? '' : 's'}`}
+          </Text>
+        ) : null}
+      </View>
+
+      <FlatList
+        style={styles.lista}
+        data={hayBusqueda ? resultados : []}
+        keyExtractor={(item) => item.codpro}
+        renderItem={({ item }) => (
+          <ProductoCard
+            producto={item}
+            onPress={() => abrirConteo(item.codpro)}
+            onLongPress={() => confirmarEliminar(item)}
+          />
+        )}
+        ListEmptyComponent={
+          hayBusqueda ? (
+            buscando ? (
+              <ActivityIndicator color={InventarioColors.accent} style={styles.loader} />
+            ) : (
+              <Text style={styles.empty}>No hay coincidencias. Puedes crear el producto nuevo.</Text>
+            )
+          ) : null
+        }
+        contentContainerStyle={styles.listContent}
+        keyboardShouldPersistTaps="always"
+        keyboardDismissMode="on-drag"
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: { flex: 1, backgroundColor: InventarioColors.bg },
+  top: { paddingHorizontal: 16, paddingTop: 8 },
+  lista: { flex: 1 },
+  listContent: { paddingHorizontal: 16, paddingBottom: 24, flexGrow: 1 },
+  resumenMini: {
+    backgroundColor: InventarioColors.surface,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: InventarioColors.border,
   },
-  stepContainer: {
-    gap: 8,
+  resumenText: { color: InventarioColors.textMuted, textAlign: 'center', fontSize: 13 },
+  primaryBtn: {
+    backgroundColor: InventarioColors.accent,
+    borderRadius: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  primaryBtnText: { color: '#111', fontWeight: '800', fontSize: 17 },
+  primaryBtnHint: { color: '#3D2000', fontSize: 11, marginTop: 4 },
+  searchLabel: {
+    color: InventarioColors.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 6,
+    textTransform: 'uppercase',
+  },
+  search: {
+    backgroundColor: InventarioColors.surface,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    color: InventarioColors.text,
+    borderWidth: 1,
+    borderColor: InventarioColors.border,
+    marginBottom: 8,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  accionCodigo: {
+    backgroundColor: InventarioColors.surface,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: InventarioColors.accent,
+  },
+  accionCodigoText: { color: InventarioColors.accent, fontWeight: '800', fontSize: 15 },
+  accionCodigoHint: {
+    color: InventarioColors.textMuted,
+    fontSize: 11,
+    marginTop: 6,
+    textAlign: 'center',
+  },
+  resultadosTitulo: {
+    color: InventarioColors.textMuted,
+    fontSize: 13,
+    fontWeight: '600',
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  hint: { color: InventarioColors.textMuted, fontSize: 13, lineHeight: 20, marginBottom: 8 },
+  hintLongPress: {
+    color: InventarioColors.textMuted,
+    fontSize: 11,
+    marginBottom: 6,
   },
+  loader: { marginTop: 16 },
+  empty: { color: InventarioColors.textMuted, textAlign: 'center', marginTop: 16, lineHeight: 22 },
 });

@@ -1,50 +1,56 @@
-# Welcome to your Expo app 👋
+# Control de inventario — Autorepuestos
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+App móvil (Expo) para inventario rápido en local, con SQLite offline, sincronización en red local y exportación a Excel.
 
-## Get started
+## Columnas del Excel
 
-1. Install dependencies
+| Código de producto | Descripción de producto | Unidad de medida | Stock | Precio proveedor / Costo | Precio de venta al público | Marca | Familia |
+|--------------------|-------------------------|------------------|-------|--------------------------|----------------------------|-------|---------|
 
-   ```bash
-   npm install
-   ```
+Al importar se aceptan abreviaturas y variantes (codpro, PRECIO PROV., etc.).
 
-2. Start the app
+`marca` y `familia` son opcionales. Las familias son configurables (Frenos, Motor, Lubricantes, etc.).
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Inicio rápido
 
 ```bash
-npm run reset-project
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Escanea el QR con **Expo Go** en Android/iOS.
 
-## Learn more
+## Flujo de trabajo recomendado
 
-To learn more about developing your project with Expo, look at the following resources:
+1. **Antes del inventario**: en *Familias*, revisa o agrega categorías (Frenos, Suspensión, etc.).
+2. **Carga catálogo**: importa Excel en *Más* o crea productos en *Catálogo* (códigos siempre en MAYÚSCULAS).
+3. **Conteo**: filtra familia → escribe código → si no existe aparece *Crear y contar* → en una pantalla editas stock, costo, PVP y demás → *Guardar y otro código*.
+4. **Varios teléfonos**: en un PC de la tienda ejecuta el coordinador LAN (abajo) y en *Más* cada móvil configura la IP y pulsa *Sincronizar*.
+5. **Cierre**: *Más* → *Exportar inventario (.xlsx)* y comparte el archivo.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Sincronización LAN (sin nube)
 
-## Join the community
+En un PC conectado al mismo WiFi del local:
 
-Join our community of developers creating universal apps.
+```bash
+npm run sync-server
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Copia la URL que muestra (ej. `http://192.168.1.50:8787`) en cada teléfono → pestaña *Más* → *IP del coordinador* → *Sincronizar ahora*.
+
+El servidor fusiona conteos por producto usando la fecha `updated_at` (gana el más reciente).
+
+## Scripts
+
+| Comando | Descripción |
+|---------|-------------|
+| `npx expo start` | App móvil |
+| `npm run sync-server` | Coordinador en red local |
+| `npm run lint` | Linter |
+
+## Tecnologías
+
+- **expo-sqlite** — base de datos local
+- Entrada manual del **código del fabricante/cartón** (ideal para repuestos con distintos códigos de barras)
+- **xlsx** — exportación Excel
+- **Express + better-sqlite3** — coordinador LAN opcional
