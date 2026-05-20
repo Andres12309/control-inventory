@@ -113,6 +113,10 @@ export default function ConteoScreen() {
       Alert.alert('Código requerido', 'Escribe el código del cartón.');
       return;
     }
+    if (familiaId == null) {
+      Alert.alert('Familia obligatoria', 'Selecciona la familia del producto.');
+      return;
+    }
     const stock = parseNum(stockStr);
     if (stockStr.trim() !== '' && (stock == null || stock < 0)) {
       Alert.alert('Stock inválido', 'Ingresa una cantidad válida.');
@@ -203,14 +207,14 @@ export default function ConteoScreen() {
         <CampoRapido label="PVP A" value={pvpa} onChangeText={setPvpa} keyboardType="decimal-pad" />
       </View>
 
-      <Text style={styles.section}>Familia</Text>
+      <Text style={styles.section}>Familia (obligatoria)</Text>
+      {familias.length === 0 ? (
+        <Text style={styles.familiaHint}>
+          No hay familias activas. Créalas en la pestaña Familias.
+        </Text>
+      ) : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroll}>
         <View style={styles.chips}>
-          <Pressable
-            style={[styles.chip, familiaId === null && styles.chipOn]}
-            onPress={() => setFamiliaId(null)}>
-            <Text style={familiaId === null ? styles.chipOnText : styles.chipText}>—</Text>
-          </Pressable>
           {familias.map((f) => (
             <Pressable
               key={f.id}
@@ -301,6 +305,7 @@ const styles = StyleSheet.create({
   },
   ventasTitle: { color: '#FCA5A5', fontWeight: '800', fontSize: 14 },
   ventasSub: { color: InventarioColors.textMuted, fontSize: 12, marginTop: 6, lineHeight: 18 },
+  familiaHint: { color: InventarioColors.accent, fontSize: 12, marginBottom: 8 },
   chipsScroll: { maxHeight: 44 },
   chips: { flexDirection: 'row', gap: 8, paddingVertical: 4 },
   chip: {

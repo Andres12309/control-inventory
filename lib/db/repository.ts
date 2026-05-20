@@ -98,6 +98,36 @@ export async function toggleFamiliaActiva(db: SQLiteDatabase, id: number): Promi
   );
 }
 
+export async function desactivarFamilia(db: SQLiteDatabase, id: number): Promise<void> {
+  await db.runAsync('UPDATE familias SET activa = 0 WHERE id = ?', id);
+}
+
+export async function activarFamilia(db: SQLiteDatabase, id: number): Promise<void> {
+  await db.runAsync('UPDATE familias SET activa = 1 WHERE id = ?', id);
+}
+
+export async function countProductosEnFamilia(
+  db: SQLiteDatabase,
+  familiaId: number
+): Promise<number> {
+  const row = await db.getFirstAsync<{ total: number }>(
+    'SELECT COUNT(*) AS total FROM productos WHERE familia_id = ?',
+    familiaId
+  );
+  return row?.total ?? 0;
+}
+
+/** Elimina la familia si no hay productos asignados. */
+export async function eliminarFamilia(
+  db: SQLiteDatabase,
+  id: number
+): Promise<{ ok: true } | { ok: false; productos: number }> {
+  const productos = await countProductosEnFamilia(db, id);
+  if (productos > 0) return { ok: false, productos };
+  await db.runAsync('DELETE FROM familias WHERE id = ?', id);
+  return { ok: true };
+}
+
 export async function getProducto(
   db: SQLiteDatabase,
   codpro: string
@@ -148,6 +178,26 @@ export async function listProductosPorFamilia(
   sql += sqlFiltroEstado(filtroEstado);
   sql += ' ORDER BY p.despro';
   return db.getAllAsync<ProductoConConteo>(sql, ...params);
+}
+
+export async function countProductosPorFamilia(
+  db: SQLiteDatabase,
+  filtroEstado: FiltroEstadoInventario = 'todos'
+): Promise<{ porId: Record<number, number>; todas: number }> {
+  const rows = await db.getAllAsync<{ familia_id: number | null; total: number }>(`
+    SELECT p.familia_id AS familia_id, COUNT(*) AS total
+    FROM productos p
+    LEFT JOIN conteos c ON c.codpro = p.codpro
+    WHERE 1=1${sqlFiltroEstado(filtroEstado)}
+    GROUP BY p.familia_id
+  `);
+  const porId: Record<number, number> = {};
+  let todas = 0;
+  for (const row of rows) {
+    todas += row.total;
+    if (row.familia_id != null) porId[row.familia_id] = row.total;
+  }
+  return { porId, todas };
 }
 
 export async function upsertProducto(
@@ -265,6 +315,7 @@ export async function guardarFichaRapida(
 ): Promise<void> {
   const codpro = normalizeCodpro(data.codpro);
   if (!codpro) throw new Error('Código de producto requerido');
+  if (data.familia_id == null) throw new Error('La familia es obligatoria');
 
   await upsertProducto(db, {
     codpro,

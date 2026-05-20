@@ -1,15 +1,28 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
-import { InventarioColors } from '@/constants/inventario-theme';
-import type { Familia } from '@/lib/types';
+import { InventarioColors } from "@/constants/inventario-theme";
+import type { Familia } from "@/lib/types";
 
 type Props = {
   familias: Familia[];
   selectedId: number | null;
   onSelect: (id: number | null) => void;
+  conteosPorFamilia?: Record<number, number>;
+  totalTodas?: number;
 };
 
-export function FamiliaChips({ familias, selectedId, onSelect }: Props) {
+function etiquetaChip(nombre: string, total?: number) {
+  if (total == null) return nombre;
+  return `${nombre} (${total})`;
+}
+
+export function FamiliaChips({
+  familias,
+  selectedId,
+  onSelect,
+  conteosPorFamilia,
+  totalTodas,
+}: Props) {
   return (
     <View style={styles.wrap}>
       <Text style={styles.titulo}>Familia</Text>
@@ -17,12 +30,17 @@ export function FamiliaChips({ familias, selectedId, onSelect }: Props) {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.row}
-        keyboardShouldPersistTaps="handled">
-        <Chip label="Todas" selected={selectedId === null} onPress={() => onSelect(null)} />
+        keyboardShouldPersistTaps="handled"
+      >
+        <Chip
+          label={etiquetaChip("Todas", totalTodas)}
+          selected={selectedId === null}
+          onPress={() => onSelect(null)}
+        />
         {familias.map((f) => (
           <Chip
             key={f.id}
-            label={f.nombre}
+            label={etiquetaChip(f.nombre, conteosPorFamilia?.[f.id] ?? 0)}
             selected={selectedId === f.id}
             onPress={() => onSelect(f.id)}
           />
@@ -46,8 +64,12 @@ function Chip({
       style={[styles.chip, selected && styles.chipActive]}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityState={{ selected }}>
-      <Text style={[styles.chipText, selected && styles.chipTextActive]} numberOfLines={1}>
+      accessibilityState={{ selected }}
+    >
+      <Text
+        style={[styles.chipText, selected && styles.chipTextActive]}
+        numberOfLines={1}
+      >
         {label}
       </Text>
     </Pressable>
@@ -59,13 +81,13 @@ const styles = StyleSheet.create({
   titulo: {
     color: InventarioColors.textMuted,
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 8,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     paddingRight: 16,
   },
@@ -84,8 +106,8 @@ const styles = StyleSheet.create({
   },
   chipText: {
     color: InventarioColors.text,
-    fontWeight: '600',
+    fontWeight: "600",
     fontSize: 13,
   },
-  chipTextActive: { color: '#111', fontWeight: '800' },
+  chipTextActive: { color: "#111", fontWeight: "800" },
 });

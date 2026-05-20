@@ -12,7 +12,14 @@ import {
 } from 'react-native';
 
 import { InventarioColors } from '@/constants/inventario-theme';
-import { listFamilias, toggleFamiliaActiva, upsertFamilia } from '@/lib/db/repository';
+import {
+  activarFamilia,
+  countProductosEnFamilia,
+  desactivarFamilia,
+  eliminarFamilia,
+  listFamilias,
+  upsertFamilia,
+} from '@/lib/db/repository';
 import type { Familia } from '@/lib/types';
 
 export default function FamiliasScreen() {
@@ -42,10 +49,61 @@ export default function FamiliasScreen() {
     }
   };
 
+  const confirmarDesactivar = (item: Familia) => {
+    Alert.alert(
+      'Desactivar familia',
+      `«${item.nombre}» dejará de aparecer en los filtros de Inventario. Los productos conservan su familia.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Desactivar',
+          onPress: async () => {
+            await desactivarFamilia(db, item.id);
+            await cargar();
+          },
+        },
+      ]
+    );
+  };
+
+  const confirmarEliminar = async (item: Familia) => {
+    const productos = await countProductosEnFamilia(db, item.id);
+    if (productos > 0) {
+      Alert.alert(
+        'No se puede eliminar',
+        `Hay ${productos} producto${productos === 1 ? '' : 's'} con la familia «${item.nombre}». Desactívala o reasigna esos productos antes de eliminar.`
+      );
+      return;
+    }
+    Alert.alert(
+      'Eliminar familia',
+      `¿Eliminar «${item.nombre}» de forma permanente? Esta acción no se puede deshacer.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            const result = await eliminarFamilia(db, item.id);
+            if (!result.ok) {
+              Alert.alert(
+                'No se puede eliminar',
+                `Hay ${result.productos} producto(s) con esta familia.`
+              );
+              return;
+            }
+            await cargar();
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.help}>
         Cada operador puede filtrar por familia en Inventario (ej. solo Frenos, solo Motor).
+        Desactivar oculta la familia en filtros; eliminar la borra si no tiene productos.
       </Text>
 
       <View style={styles.row}>
@@ -66,18 +124,32 @@ export default function FamiliasScreen() {
         keyExtractor={(f) => String(f.id)}
         renderItem={({ item }) => (
           <View style={styles.item}>
-            <View>
+            <View style={styles.itemInfo}>
               <Text style={styles.nombre}>{item.nombre}</Text>
-              <Text style={styles.estado}>{item.activa ? 'Activa' : 'Inactiva'}</Text>
+              <Text style={styles.estado}>
+                {item.activa ? 'Activa' : 'Inactiva'}
+                {item.activa ? '' : ' · no aparece en Inventario'}
+              </Text>
             </View>
-            <Pressable
-              style={styles.toggle}
-              onPress={async () => {
-                await toggleFamiliaActiva(db, item.id);
-                await cargar();
-              }}>
-              <Text style={styles.toggleText}>{item.activa ? 'Desactivar' : 'Activar'}</Text>
-            </Pressable>
+            <View style={styles.acciones}>
+              {item.activa ? (
+                <Pressable style={styles.accionBtn} onPress={() => confirmarDesactivar(item)}>
+                  <Text style={styles.accionText}>Desactivar</Text>
+                </Pressable>
+              ) : (
+                <Pressable
+                  style={styles.accionBtn}
+                  onPress={async () => {
+                    await activarFamilia(db, item.id);
+                    await cargar();
+                  }}>
+                  <Text style={styles.accionText}>Activar</Text>
+                </Pressable>
+              )}
+              <Pressable style={styles.accionBtn} onPress={() => confirmarEliminar(item)}>
+                <Text style={styles.eliminarText}>Eliminar</Text>
+              </Pressable>
+            </View>
           </View>
         )}
       />
@@ -107,9 +179,6 @@ const styles = StyleSheet.create({
   },
   btnText: { color: '#111', fontWeight: '700' },
   item: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     backgroundColor: InventarioColors.surface,
     borderRadius: 12,
     padding: 14,
@@ -117,8 +186,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: InventarioColors.border,
   },
+  itemInfo: { marginBottom: 10 },
   nombre: { color: InventarioColors.text, fontWeight: '700', fontSize: 16 },
   estado: { color: InventarioColors.textMuted, fontSize: 12, marginTop: 2 },
-  toggle: { padding: 8 },
-  toggleText: { color: InventarioColors.accent, fontWeight: '600' },
+  acciones: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  accionBtn: { paddingVertical: 4, paddingHorizontal: 2 },
+  accionText: { color: InventarioColors.accent, fontWeight: '600', fontSize: 14 },
+  eliminarText: { color: '#F87171', fontWeight: '600', fontSize: 14 },
 });

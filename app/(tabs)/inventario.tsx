@@ -21,6 +21,7 @@ import { useEliminarProducto } from '@/hooks/use-eliminar-producto';
 import { useInventarioActivo } from '@/hooks/use-inventario-activo';
 import { normalizeCodpro, normalizeCodproInput } from '@/lib/codpro';
 import {
+  countProductosPorFamilia,
   getProducto,
   getResumenInventario,
   listFamilias,
@@ -40,6 +41,8 @@ export default function InventarioListaScreen() {
   const [query, setQuery] = useState('');
   const [items, setItems] = useState<ProductoConConteo[]>([]);
   const [resumen, setResumen] = useState({ totalProductos: 0, contados: 0, pendientes: 0 });
+  const [conteosFamilia, setConteosFamilia] = useState<Record<number, number>>({});
+  const [totalTodasFamilias, setTotalTodasFamilias] = useState(0);
   const [loading, setLoading] = useState(true);
   const [existeCodigoExacto, setExisteCodigoExacto] = useState<boolean | null>(null);
 
@@ -50,12 +53,15 @@ export default function InventarioListaScreen() {
   const cargar = useCallback(async () => {
     setLoading(true);
     try {
-      const [fams, res] = await Promise.all([
+      const [fams, res, conteos] = await Promise.all([
         listFamilias(db, true),
         getResumenInventario(db),
+        countProductosPorFamilia(db, filtroEstado),
       ]);
       setFamilias(fams);
       setResumen(res);
+      setConteosFamilia(conteos.porId);
+      setTotalTodasFamilias(conteos.todas);
 
       const q = query.trim();
       if (q.length >= 1) {
@@ -165,7 +171,13 @@ export default function InventarioListaScreen() {
         </Pressable>
       ) : null}
 
-      <FamiliaChips familias={familias} selectedId={familiaId} onSelect={setFamiliaId} />
+      <FamiliaChips
+        familias={familias}
+        selectedId={familiaId}
+        onSelect={setFamiliaId}
+        conteosPorFamilia={conteosFamilia}
+        totalTodas={totalTodasFamilias}
+      />
 
       {etiquetaFiltro ? (
         <Text style={styles.filtroActivo}>{etiquetaFiltro} · toca el contador otra vez para quitar</Text>

@@ -69,6 +69,10 @@ export default function ProductoForm({ codpro }: Props) {
       Alert.alert('Datos incompletos', 'Código y descripción son obligatorios.');
       return;
     }
+    if (familiaId == null) {
+      Alert.alert('Familia obligatoria', 'Selecciona la familia del producto.');
+      return;
+    }
     await upsertProducto(db, {
       codpro: cod,
       despro: normalizeDespro(despro),
@@ -113,13 +117,13 @@ export default function ProductoForm({ codpro }: Props) {
       <Field label="Marca (opcional)" value={marca} onChangeText={setMarca} />
       <Field label="Stock sistema (opcional)" value={stockSistema} onChangeText={setStockSistema} keyboardType="decimal-pad" />
 
-      <Text style={styles.label}>Familia</Text>
+      <Text style={styles.label}>Familia (obligatoria)</Text>
+      {familias.length === 0 ? (
+        <Text style={styles.familiaHint}>
+          No hay familias activas. Créalas en la pestaña Familias.
+        </Text>
+      ) : null}
       <View style={styles.chips}>
-        <Pressable
-          style={[styles.chip, familiaId === null && styles.chipOn]}
-          onPress={() => setFamiliaId(null)}>
-          <Text style={familiaId === null ? styles.chipTextOn : styles.chipText}>Sin familia</Text>
-        </Pressable>
         {familias.map((f) => (
           <Pressable
             key={f.id}
@@ -174,6 +178,7 @@ const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 32 },
   center: { flex: 1, justifyContent: 'center' },
   label: { color: InventarioColors.textMuted, marginTop: 12, marginBottom: 6 },
+  familiaHint: { color: InventarioColors.accent, fontSize: 12, marginBottom: 8 },
   input: {
     backgroundColor: InventarioColors.surface,
     borderRadius: 12,
