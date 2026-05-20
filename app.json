@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "control-inventario",
+    "name": "Inventario Puyo Motors",
     "slug": "control-inventario",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "controlinventario",
@@ -68,6 +68,12 @@
     },
     "runtimeVersion": {
       "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/100a0d71-4d36-4b09-b1e3-941720b253c6",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
     },
     "owner": "andresdev1868"
   }

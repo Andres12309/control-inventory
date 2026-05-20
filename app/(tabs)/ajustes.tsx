@@ -14,6 +14,7 @@ import {
   View,
 } from 'react-native';
 
+import { ActualizacionesOta } from '@/components/inventario/ActualizacionesOta';
 import { InventarioColors } from '@/constants/inventario-theme';
 import { useDeviceId } from '@/hooks/use-device-id';
 import { useInventarioActivo } from '@/hooks/use-inventario-activo';
@@ -256,6 +257,9 @@ export default function AjustesScreen() {
         <Text style={styles.infoItem}>5. Al terminar un bloque, pulsa Sincronizar (incluye ventas)</Text>
         <Text style={styles.infoItem}>6. Al cerrar el día, exporta Excel desde cualquier móvil</Text>
       </View>
+
+      <Text style={[styles.section, { marginTop: 28 }]}>Actualizaciones OTA</Text>
+      <ActualizacionesOta />
 
       <Text style={styles.deviceId}>ID dispositivo: {deviceId || '...'}</Text>
     </ScrollView>
