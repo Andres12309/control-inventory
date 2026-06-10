@@ -13,6 +13,7 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      initialRouteName="almacen"
       screenOptions={{
         tabBarActiveTintColor: InventarioColors.primary,
         tabBarInactiveTintColor: InventarioColors.textMuted,

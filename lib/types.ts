@@ -21,9 +21,7 @@ export type Producto = {
 export type ProductoConConteo = Producto & {
   stock_contado: number | null;
   conteo_updated_at: string | null;
-  /** Unidades vendidas desde que inició el inventario en curso. */
   ventas_durante?: number;
-  /** Ventas después del último conteo guardado (para stock real). */
   ventas_desde_conteo?: number;
 };
 
@@ -39,4 +37,4 @@ export type SyncConfig = {
 };
 
 /** Filtro de lista en pestaña Inventario (contadores). */
-export type FiltroEstadoInventario = 'todos' | 'contados' | 'pendientes';
+export type FiltroEstadoInventario = "todos" | "contados" | "pendientes";
