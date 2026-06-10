@@ -1,6 +1,5 @@
-import { useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   FlatList,
@@ -22,7 +21,9 @@ import {
 } from '@/lib/db/repository';
 import type { Familia } from '@/lib/types';
 
-export default function FamiliasScreen() {
+type Props = { activo: boolean };
+
+export function FamiliasPanel({ activo }: Props) {
   const db = useSQLiteContext();
   const [familias, setFamilias] = useState<Familia[]>([]);
   const [nueva, setNueva] = useState('');
@@ -31,11 +32,9 @@ export default function FamiliasScreen() {
     setFamilias(await listFamilias(db));
   }, [db]);
 
-  useFocusEffect(
-    useCallback(() => {
-      cargar();
-    }, [cargar])
-  );
+  useEffect(() => {
+    if (activo) cargar();
+  }, [activo, cargar]);
 
   const agregar = async () => {
     const nombre = nueva.trim();
@@ -52,7 +51,7 @@ export default function FamiliasScreen() {
   const confirmarDesactivar = (item: Familia) => {
     Alert.alert(
       'Desactivar familia',
-      `«${item.nombre}» dejará de aparecer en los filtros de Inventario. Los productos conservan su familia.`,
+      `«${item.nombre}» dejará de aparecer en los filtros del catálogo. Los productos conservan su familia.`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -102,7 +101,7 @@ export default function FamiliasScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.help}>
-        Cada operador puede filtrar por familia en Inventario (ej. solo Frenos, solo Motor).
+        Cada operador puede filtrar por familia en el catálogo (ej. solo Frenos, solo Motor).
         Desactivar oculta la familia en filtros; eliminar la borra si no tiene productos.
       </Text>
 
@@ -128,7 +127,7 @@ export default function FamiliasScreen() {
               <Text style={styles.nombre}>{item.nombre}</Text>
               <Text style={styles.estado}>
                 {item.activa ? 'Activa' : 'Inactiva'}
-                {item.activa ? '' : ' · no aparece en Inventario'}
+                {item.activa ? '' : ' · no aparece en filtros'}
               </Text>
             </View>
             <View style={styles.acciones}>
@@ -172,12 +171,12 @@ const styles = StyleSheet.create({
     borderColor: InventarioColors.border,
   },
   btn: {
-    backgroundColor: InventarioColors.accent,
+    backgroundColor: InventarioColors.primary,
     borderRadius: 12,
     paddingHorizontal: 16,
     justifyContent: 'center',
   },
-  btnText: { color: '#111', fontWeight: '700' },
+  btnText: { color: InventarioColors.textOnPrimary, fontWeight: '700' },
   item: {
     backgroundColor: InventarioColors.surface,
     borderRadius: 12,
@@ -192,5 +191,5 @@ const styles = StyleSheet.create({
   acciones: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   accionBtn: { paddingVertical: 4, paddingHorizontal: 2 },
   accionText: { color: InventarioColors.accent, fontWeight: '600', fontSize: 14 },
-  eliminarText: { color: '#F87171', fontWeight: '600', fontSize: 14 },
+  eliminarText: { color: InventarioColors.accent, fontWeight: '600', fontSize: 14 },
 });

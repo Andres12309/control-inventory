@@ -1,0 +1,13 @@
+name: Update Preview
+
+on:
+  push:
+    branches: ['main']
+
+jobs:
+  update_preview:
+    name: Update Preview Channel
+    type: update
+    environment: preview
+    params:
+      channel: preview

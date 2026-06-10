@@ -101,13 +101,13 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   chipActive: {
-    backgroundColor: InventarioColors.accent,
-    borderColor: InventarioColors.accent,
+    backgroundColor: InventarioColors.primary,
+    borderColor: InventarioColors.primary,
   },
   chipText: {
     color: InventarioColors.text,
     fontWeight: "600",
     fontSize: 13,
   },
-  chipTextActive: { color: "#111", fontWeight: "800" },
+  chipTextActive: { color: InventarioColors.textOnPrimary, fontWeight: "800" },
 });

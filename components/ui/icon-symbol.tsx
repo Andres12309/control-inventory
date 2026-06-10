@@ -23,6 +23,8 @@ const MAPPING = {
   'tray.full': 'inventory-2',
   'folder.fill': 'folder',
   'gearshape.fill': 'settings',
+  'shippingbox.fill': 'inventory',
+  'wrench.and.screwdriver.fill': 'build',
 } as IconMapping;
 
 /**
