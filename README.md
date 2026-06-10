@@ -105,7 +105,21 @@ Escanea el QR con **Expo Go** o pulsa `a` / `i` para emulador.
 
 ### Build y actualizaciones OTA
 
-El proyecto usa **EAS Updates** (`runtimeVersion: appVersion`). Los pushes a `main` pueden publicar al canal `preview` vía workflow en `.eas/workflows/`.
+El proyecto usa **EAS Update** con `runtimeVersion: appVersion` y el canal `preview` definido en `eas.json`.
+
+| Workflow | Archivo | Cuándo |
+|----------|---------|--------|
+| **OTA (JS)** | `.eas/workflows/preview-update.yml` | Push a `main` (excluye solo `.md`) o manual |
+| **Build nativo** | `.eas/workflows/preview-build.yml` | Tag `preview-v*` o manual |
+
+Requisitos para que corran solos en cada push: repo conectado a EAS y workflows habilitados en [expo.dev](https://expo.dev). Si no, ejecútalos a mano:
+
+```bash
+eas workflow:run .eas/workflows/preview-update.yml
+eas workflow:run .eas/workflows/preview-build.yml
+```
+
+> `environment: preview` en un job de workflow es el **entorno de variables de EAS** (secrets del dashboard), no el canal OTA. El canal se define en `params.channel: preview`.
 
 ---
 

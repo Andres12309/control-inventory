@@ -1,0 +1,22 @@
+name: Preview — EAS Build Android (perfil preview)
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        type: string
+        required: false
+        description: Mensaje del build (solo ejecución manual)
+        default: "Preview build Android"
+  push:
+    tags:
+      - "preview-v*"
+
+jobs:
+  build_android:
+    name: Android (preview)
+    type: build
+    params:
+      platform: android
+      profile: preview
+      message: ${{ inputs.message || github.commit_message || 'Preview build Android' }}
