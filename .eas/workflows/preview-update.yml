@@ -1,0 +1,27 @@
+name: Preview — EAS Update (canal preview, Android)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "**"
+      - "!**/*.md"
+      - "!.cursor/**"
+      - "!README.md"
+  workflow_dispatch:
+    inputs:
+      message:
+        type: string
+        required: false
+        description: Mensaje del update (solo ejecución manual)
+        default: "Preview manual"
+
+jobs:
+  publish_preview_update:
+    name: Publicar OTA Android (preview)
+    type: update
+    params:
+      channel: preview
+      platform: android
+      message: ${{ inputs.message || github.commit_message || 'Preview update' }}
