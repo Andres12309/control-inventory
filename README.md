@@ -56,32 +56,32 @@ flowchart LR
 
 El catálogo completo del ERP, importado desde Excel, optimizado para **encontrar piezas en segundos**:
 
-| Capacidad | Detalle |
-|-----------|---------|
-| Búsqueda inteligente | Multi-palabra, sinónimos (`chev` → Chevrolet, `filt` → filtro), tolerancia a errores de tipeo |
-| Prioridad por nombre | La descripción manda; el código ERP solo destaca cuando la búsqueda parece un código |
-| Filtros rápidos | Sin stock, stock bajo, favoritos, por familia y marca |
-| Historial y recientes | Últimas búsquedas y productos vistos |
-| Estadísticas | Top productos, marcas y familias más consultadas |
-| Copiar código | Un toque al portapapeles con feedback háptico |
-| Header adaptable | Botón de importación que se ajusta al ancho de pantalla |
+| Capacidad             | Detalle                                                                                       |
+| --------------------- | --------------------------------------------------------------------------------------------- |
+| Búsqueda inteligente  | Multi-palabra, sinónimos (`chev` → Chevrolet, `filt` → filtro), tolerancia a errores de tipeo |
+| Prioridad por nombre  | La descripción manda; el código ERP solo destaca cuando la búsqueda parece un código          |
+| Filtros rápidos       | Sin stock, stock bajo, favoritos, por familia y marca                                         |
+| Historial y recientes | Últimas búsquedas y productos vistos                                                          |
+| Estadísticas          | Top productos, marcas y familias más consultadas                                              |
+| Copiar código         | Un toque al portapapeles con feedback háptico                                                 |
+| Header adaptable      | Botón de importación que se ajusta al ancho de pantalla                                       |
 
 ### Herramientas — operación diaria
 
-| Sección | Para qué sirve |
-|---------|----------------|
-| **Catálogo** | Alta, edición y búsqueda del inventario físico; vista tabla o tarjetas |
-| **Familias** | Categorías configurables (Frenos, Motor, Lubricantes…) |
-| **Ajustes** | Importar/exportar Excel, sincronizar LAN, jornada de inventario, actualizaciones OTA |
+| Sección      | Para qué sirve                                                                       |
+| ------------ | ------------------------------------------------------------------------------------ |
+| **Catálogo** | Alta, edición y búsqueda del inventario físico; vista tabla o tarjetas               |
+| **Familias** | Categorías configurables (Frenos, Motor, Lubricantes…)                               |
+| **Ajustes**  | Importar/exportar Excel, sincronizar LAN, jornada de inventario, actualizaciones OTA |
 
 ### Flujos de trabajo
 
-| Flujo | Ruta rápida |
-|-------|-------------|
-| Conteo físico | Catálogo → código → editar stock, costo y PVP → *Guardar y otro código* |
-| Venta en jornada | Iniciar jornada → **Venta rápida** → descuenta stock al vuelo |
-| Varios teléfonos | PC con coordinador LAN + IP en Ajustes → *Sincronizar ahora* |
-| Cierre de inventario | Ajustes → *Exportar inventario (.xlsx)* |
+| Flujo                | Ruta rápida                                                             |
+| -------------------- | ----------------------------------------------------------------------- |
+| Conteo físico        | Catálogo → código → editar stock, costo y PVP → _Guardar y otro código_ |
+| Venta en jornada     | Iniciar jornada → **Venta rápida** → descuenta stock al vuelo           |
+| Varios teléfonos     | PC con coordinador LAN + IP en Ajustes → _Sincronizar ahora_            |
+| Cierre de inventario | Ajustes → _Exportar inventario (.xlsx)_                                 |
 
 ---
 
@@ -107,10 +107,10 @@ Escanea el QR con **Expo Go** o pulsa `a` / `i` para emulador.
 
 El proyecto usa **EAS Update** con `runtimeVersion: appVersion` y el canal `preview` definido en `eas.json`.
 
-| Workflow | Archivo | Cuándo |
-|----------|---------|--------|
-| **OTA (JS)** | `.eas/workflows/preview-update.yml` | Push a `main` (excluye solo `.md`) o manual |
-| **Build nativo** | `.eas/workflows/preview-build.yml` | Tag `preview-v*` o manual |
+| Workflow         | Archivo                             | Cuándo                                      |
+| ---------------- | ----------------------------------- | ------------------------------------------- |
+| **OTA (JS)**     | `.eas/workflows/preview-update.yml` | Push a `main` (excluye solo `.md`) o manual |
+| **Build nativo** | `.eas/workflows/preview-build.yml`  | Tag `preview-v*` o manual                   |
 
 Requisitos para que corran solos en cada push: repo conectado a EAS y workflows habilitados en [expo.dev](https://expo.dev). Si no, ejecútalos a mano:
 
@@ -157,7 +157,7 @@ sequenceDiagram
 ### Inventario físico (importar / exportar)
 
 | Código de producto | Descripción de producto | Unidad de medida | Stock | Precio proveedor / Costo | Precio de venta al público | Marca | Familia |
-|--------------------|-------------------------|------------------|-------|--------------------------|----------------------------|-------|---------|
+| ------------------ | ----------------------- | ---------------- | ----- | ------------------------ | -------------------------- | ----- | ------- |
 
 Al importar se aceptan abreviaturas y variantes (`codpro`, `PRECIO PROV.`, etc.). `marca` y `familia` son opcionales.
 
@@ -181,13 +181,13 @@ Diseñado para el lenguaje real del mostrador:
 
 Piezas del motor (`lib/almacen/`):
 
-| Archivo | Rol |
-|---------|-----|
-| `search-synonyms.ts` | Diccionario de abreviaciones y sinónimos |
-| `tokenize.ts` | Normalización, fragmentos y alias al importar |
-| `search-engine.ts` | Intersección multi-palabra, fuzzy, ranking y popularidad |
-| `search-analytics.ts` | Productos más consultados y vistos |
-| `db-queue.ts` | Cola serializada SQLite (estable en Android) |
+| Archivo               | Rol                                                      |
+| --------------------- | -------------------------------------------------------- |
+| `search-synonyms.ts`  | Diccionario de abreviaciones y sinónimos                 |
+| `tokenize.ts`         | Normalización, fragmentos y alias al importar            |
+| `search-engine.ts`    | Intersección multi-palabra, fuzzy, ranking y popularidad |
+| `search-analytics.ts` | Productos más consultados y vistos                       |
+| `db-queue.ts`         | Cola serializada SQLite (estable en Android)             |
 
 ---
 
@@ -195,11 +195,11 @@ Piezas del motor (`lib/almacen/`):
 
 Identidad **Azul · Blanco · Rojo** — definida en `constants/inventario-theme.ts`:
 
-| Color | Uso |
-|-------|-----|
-| Azul `#1A4B8C` | Marca, navegación, estados positivos |
-| Blanco `#FFFFFF` | Superficies y tarjetas |
-| Rojo `#C41E3A` | Acciones fuertes, ventas, alertas de stock |
+| Color            | Uso                                        |
+| ---------------- | ------------------------------------------ |
+| Azul `#1A4B8C`   | Marca, navegación, estados positivos       |
+| Blanco `#FFFFFF` | Superficies y tarjetas                     |
+| Rojo `#C41E3A`   | Acciones fuertes, ventas, alertas de stock |
 
 ---
 
@@ -230,28 +230,28 @@ control-inventario/
 
 ## Scripts
 
-| Comando | Descripción |
-|---------|-------------|
-| `npx expo start` | Servidor de desarrollo y QR |
-| `npm run android` | Abrir en Android |
-| `npm run ios` | Abrir en iOS |
-| `npm run sync-server` | Coordinador de inventario en red local |
-| `npm run sync-server:install` | Instalar dependencias del coordinador |
-| `npm run lint` | ESLint (config Expo) |
+| Comando                       | Descripción                            |
+| ----------------------------- | -------------------------------------- |
+| `npx expo start`              | Servidor de desarrollo y QR            |
+| `npm run android`             | Abrir en Android                       |
+| `npm run ios`                 | Abrir en iOS                           |
+| `npm run sync-server`         | Coordinador de inventario en red local |
+| `npm run sync-server:install` | Instalar dependencias del coordinador  |
+| `npm run lint`                | ESLint (config Expo)                   |
 
 ---
 
 ## Stack tecnológico
 
-| Capa | Tecnología |
-|------|------------|
-| Framework | [Expo SDK 54](https://docs.expo.dev/versions/v54.0.0/) + Expo Router 6 |
-| UI | React Native 0.81 · React 19 · New Architecture |
-| Datos locales | expo-sqlite |
-| Excel | xlsx |
-| Sync LAN | Express + better-sqlite3 |
-| Actualizaciones | expo-updates + EAS |
-| UX | expo-haptics · expo-clipboard · expo-document-picker |
+| Capa            | Tecnología                                                             |
+| --------------- | ---------------------------------------------------------------------- |
+| Framework       | [Expo SDK 54](https://docs.expo.dev/versions/v54.0.0/) + Expo Router 6 |
+| UI              | React Native 0.81 · React 19 · New Architecture                        |
+| Datos locales   | expo-sqlite                                                            |
+| Excel           | xlsx                                                                   |
+| Sync LAN        | Express + better-sqlite3                                               |
+| Actualizaciones | expo-updates + EAS                                                     |
+| UX              | expo-haptics · expo-clipboard · expo-document-picker                   |
 
 ---
 
@@ -259,8 +259,8 @@ control-inventario/
 
 1. **Familias** — revisa o crea categorías (Frenos, Suspensión, etc.).
 2. **Importar catálogo** — Excel de inventario en Ajustes, o productos uno a uno en Catálogo. Los códigos se guardan en **MAYÚSCULAS**.
-3. **Importar almacén ERP** — pestaña Almacén → *Importar Excel* con el export del ERP.
-4. **Conteo** — filtra familia, escribe código; si no existe, *Crear y contar*.
+3. **Importar almacén ERP** — pestaña Almacén → _Importar Excel_ con el export del ERP.
+4. **Conteo** — filtra familia, escribe código; si no existe, _Crear y contar_.
 5. **Varios móviles** — levanta el coordinador LAN y sincroniza.
 6. **Cierre** — exporta el `.xlsx` y comparte el archivo.
 
