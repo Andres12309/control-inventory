@@ -123,16 +123,26 @@ export default function ProductoForm({ codpro }: Props) {
           No hay familias activas. Créalas en la pestaña Familias.
         </Text>
       ) : null}
-      <View style={styles.chips}>
+      <ScrollView
+        horizontal
+        nestedScrollEnabled
+        showsHorizontalScrollIndicator={false}
+        style={styles.chipsScroll}
+        contentContainerStyle={styles.chips}
+        keyboardShouldPersistTaps="handled">
         {familias.map((f) => (
           <Pressable
             key={f.id}
             style={[styles.chip, familiaId === f.id && styles.chipOn]}
             onPress={() => setFamiliaId(f.id)}>
-            <Text style={familiaId === f.id ? styles.chipTextOn : styles.chipText}>{f.nombre}</Text>
+            <Text
+              style={familiaId === f.id ? styles.chipTextOn : styles.chipText}
+              numberOfLines={1}>
+              {f.nombre}
+            </Text>
           </Pressable>
         ))}
-      </View>
+      </ScrollView>
 
       <Pressable style={styles.save} onPress={guardar}>
         <Text style={styles.saveText}>Guardar producto</Text>
@@ -188,7 +198,8 @@ const styles = StyleSheet.create({
     borderColor: InventarioColors.border,
   },
   inputDisabled: { opacity: 0.6 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
+  chipsScroll: { marginTop: 4, maxHeight: 44 },
+  chips: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingRight: 16, paddingVertical: 4 },
   chip: {
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -196,16 +207,17 @@ const styles = StyleSheet.create({
     backgroundColor: InventarioColors.surface,
     borderWidth: 1,
     borderColor: InventarioColors.border,
+    flexShrink: 0,
   },
-  chipOn: { backgroundColor: InventarioColors.accent, borderColor: InventarioColors.accent },
+  chipOn: { backgroundColor: InventarioColors.primary, borderColor: InventarioColors.primary },
   chipText: { color: InventarioColors.text },
-  chipTextOn: { color: '#111', fontWeight: '700' },
+  chipTextOn: { color: InventarioColors.textOnPrimary, fontWeight: '700' },
   save: {
     marginTop: 24,
-    backgroundColor: InventarioColors.accent,
+    backgroundColor: InventarioColors.primary,
     borderRadius: 14,
     padding: 16,
     alignItems: 'center',
   },
-  saveText: { color: '#111', fontWeight: '800' },
+  saveText: { color: InventarioColors.textOnPrimary, fontWeight: '800' },
 });

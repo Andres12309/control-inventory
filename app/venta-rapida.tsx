@@ -256,7 +256,7 @@ export default function VentaRapidaScreen() {
                 disabled={guardando}
                 onPress={guardarVenta}>
                 {guardando ? (
-                  <ActivityIndicator color="#111" />
+                  <ActivityIndicator color={InventarioColors.textOnAccent} />
                 ) : (
                   <Text style={styles.primaryText}>Registrar venta</Text>
                 )}
@@ -377,22 +377,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: InventarioColors.border,
   },
-  resultadoCod: { color: InventarioColors.accent, fontWeight: '800', fontSize: 15 },
+  resultadoCod: { color: InventarioColors.primary, fontWeight: '800', fontSize: 15 },
   resultadoDes: { color: InventarioColors.text, marginTop: 4, fontSize: 14 },
   resultadoFam: { color: InventarioColors.textMuted, fontSize: 11, marginTop: 6 },
   seleccionado: {
-    backgroundColor: '#1B2E1B',
+    backgroundColor: InventarioColors.jornadaBg,
     borderRadius: 14,
     padding: 14,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#40916C',
+    borderColor: InventarioColors.jornadaBorder,
   },
   seleccionadoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   seleccionadoInfo: { flex: 1 },
-  seleccionadoCod: { color: InventarioColors.accent, fontWeight: '800', fontSize: 18 },
+  seleccionadoCod: { color: InventarioColors.primary, fontWeight: '800', fontSize: 18 },
   seleccionadoDes: { color: InventarioColors.text, marginTop: 4, fontSize: 14 },
-  cambiar: { color: '#95D5B2', fontWeight: '700', fontSize: 14 },
+  cambiar: { color: InventarioColors.primary, fontWeight: '700', fontSize: 14 },
   qtyDisplay: {
     color: InventarioColors.text,
     fontSize: 36,
@@ -419,10 +419,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 4,
   },
-  primaryText: { color: '#111', fontWeight: '800', fontSize: 16 },
+  primaryText: { color: InventarioColors.textOnAccent, fontWeight: '800', fontSize: 16 },
   disabled: { opacity: 0.6 },
   link: { alignItems: 'center', paddingVertical: 10 },
-  linkText: { color: InventarioColors.accent, fontWeight: '600', fontSize: 13 },
+  linkText: { color: InventarioColors.primary, fontWeight: '600', fontSize: 13 },
   recientesTitulo: {
     color: InventarioColors.textMuted,
     fontWeight: '700',
@@ -440,8 +440,8 @@ const styles = StyleSheet.create({
     borderColor: InventarioColors.border,
   },
   filaMain: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  filaCod: { color: InventarioColors.accent, fontWeight: '800', fontSize: 15 },
-  filaQty: { color: '#F87171', fontWeight: '800', fontSize: 18 },
+  filaCod: { color: InventarioColors.primary, fontWeight: '800', fontSize: 15 },
+  filaQty: { color: InventarioColors.accent, fontWeight: '800', fontSize: 18 },
   filaDes: { color: InventarioColors.text, marginTop: 4, fontSize: 13 },
   filaHint: { color: InventarioColors.textMuted, fontSize: 10, marginTop: 6 },
   empty: { color: InventarioColors.textMuted, textAlign: 'center', marginTop: 12, lineHeight: 20 },

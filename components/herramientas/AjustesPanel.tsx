@@ -1,8 +1,7 @@
 import Constants from 'expo-constants';
-import { useFocusEffect } from 'expo-router';
-import { useSQLiteContext } from 'expo-sqlite';
-import { useCallback, useState } from 'react';
 import { useRouter } from 'expo-router';
+import { useSQLiteContext } from 'expo-sqlite';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -22,18 +21,20 @@ import {
   aplicarSyncPull,
   buildSyncPushPayload,
   getConfig,
+  importarDesdeExcel,
   listParaExportar,
   setConfig,
 } from '@/lib/db/repository';
-import { elegirArchivoExcel, leerFilasDesdeExcelUri } from '@/lib/excel-import';
 import { exportarInventarioExcel } from '@/lib/excel-export';
-import { importarDesdeExcel } from '@/lib/db/repository';
+import { elegirArchivoExcel, leerFilasDesdeExcelUri } from '@/lib/excel-import';
 import { pingServer, syncPull, syncPush } from '@/lib/sync-client';
 
-export default function AjustesScreen() {
+type Props = { activo: boolean };
+
+export function AjustesPanel({ activo }: Props) {
   const db = useSQLiteContext();
   const deviceId = useDeviceId();
-  const { activo, resumenVentas, iniciar, cerrar } = useInventarioActivo();
+  const { activo: inventarioActivo, resumenVentas, iniciar, cerrar } = useInventarioActivo();
   const [serverUrl, setServerUrl] = useState('192.168.1.100:8787');
   const [exportando, setExportando] = useState(false);
   const [importando, setImportando] = useState(false);
@@ -41,14 +42,14 @@ export default function AjustesScreen() {
   const [probandoConexion, setProbandoConexion] = useState(false);
   const router = useRouter();
 
-  useFocusEffect(
-    useCallback(() => {
-      (async () => {
-        const url = await getConfig(db, 'sync_server_url');
-        if (url) setServerUrl(url);
-      })();
-    }, [db])
-  );
+  const cargarUrl = useCallback(async () => {
+    const url = await getConfig(db, 'sync_server_url');
+    if (url) setServerUrl(url);
+  }, [db]);
+
+  useEffect(() => {
+    if (activo) cargarUrl();
+  }, [activo, cargarUrl]);
 
   const guardarUrl = async () => {
     await setConfig(db, 'sync_server_url', serverUrl.trim());
@@ -154,7 +155,7 @@ export default function AjustesScreen() {
         Activa la jornada al empezar a contar. Registra cada venta mientras atiendes para que el
         inventario no pierda unidades ni se duplique stock.
       </Text>
-      {activo ? (
+      {inventarioActivo ? (
         <>
           <View style={styles.infoBox}>
             <Text style={styles.infoTitle}>Jornada activa</Text>
@@ -183,7 +184,7 @@ export default function AjustesScreen() {
         </Pressable>
       )}
 
-      <Text style={[styles.section, { marginTop: 28 }]}>Excel</Text>
+      <Text style={[styles.section, { marginTop: 28 }]}>Excel inventario</Text>
       <Text style={styles.desc}>
         Al exportar, la columna Stock trae el stock real a esa fecha (conteo menos ventas posteriores).
         Sin columnas de movimientos. Al importar acepta muchas variantes de encabezados.
@@ -203,7 +204,7 @@ export default function AjustesScreen() {
         disabled={exportando}
         onPress={exportar}>
         {exportando ? (
-          <ActivityIndicator color="#111" />
+          <ActivityIndicator color={InventarioColors.textOnPrimary} />
         ) : (
           <Text style={styles.primaryText}>Exportar inventario (.xlsx)</Text>
         )}
@@ -242,7 +243,7 @@ export default function AjustesScreen() {
         disabled={sincronizando || !deviceId}
         onPress={sincronizar}>
         {sincronizando ? (
-          <ActivityIndicator color="#111" />
+          <ActivityIndicator color={InventarioColors.textOnPrimary} />
         ) : (
           <Text style={styles.primaryText}>Sincronizar ahora</Text>
         )}
@@ -253,7 +254,7 @@ export default function AjustesScreen() {
         <Text style={styles.infoItem}>1. En un PC de la tienda: npm run sync-server</Text>
         <Text style={styles.infoItem}>2. Anota la IP que muestra (ej. 192.168.1.50:8787)</Text>
         <Text style={styles.infoItem}>3. Activa «Inventario en curso» y registra ventas al atender</Text>
-        <Text style={styles.infoItem}>4. Cada operador elige su familia en Inventario</Text>
+        <Text style={styles.infoItem}>4. Cada operador elige su familia en Catálogo</Text>
         <Text style={styles.infoItem}>5. Al terminar un bloque, pulsa Sincronizar (incluye ventas)</Text>
         <Text style={styles.infoItem}>6. Al cerrar el día, exporta Excel desde cualquier móvil</Text>
       </View>
@@ -282,13 +283,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   primary: {
-    backgroundColor: InventarioColors.accent,
+    backgroundColor: InventarioColors.primary,
     borderRadius: 14,
     padding: 16,
     alignItems: 'center',
     marginTop: 8,
   },
-  primaryText: { color: '#111', fontWeight: '800', fontSize: 16 },
+  primaryText: { color: InventarioColors.textOnPrimary, fontWeight: '800', fontSize: 16 },
   secondary: {
     borderRadius: 12,
     padding: 12,

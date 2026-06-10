@@ -181,7 +181,7 @@ export function ActualizacionesOta() {
         onPress={descargarEInstalar}
       >
         {descargando ? (
-          <ActivityIndicator color="#111" />
+          <ActivityIndicator color={InventarioColors.textOnPrimary} />
         ) : (
           <Text style={styles.primaryText}>Descargar e instalar</Text>
         )}
@@ -249,16 +249,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: InventarioColors.border,
   },
-  estadoOk: { borderColor: "#40916C", backgroundColor: "#1B2E1B" },
-  estadoWarn: { borderColor: "#7F1D1D", backgroundColor: "#2B1515" },
+  estadoOk: { borderColor: InventarioColors.primary, backgroundColor: InventarioColors.primarySoft },
+  estadoWarn: { borderColor: InventarioColors.accent, backgroundColor: InventarioColors.accentMuted },
   estadoText: { color: InventarioColors.text, fontSize: 13, lineHeight: 18 },
   primary: {
-    backgroundColor: InventarioColors.accent,
+    backgroundColor: InventarioColors.primary,
     borderRadius: 14,
     padding: 14,
     alignItems: "center",
   },
-  primaryText: { color: "#111", fontWeight: "800", fontSize: 15 },
+  primaryText: { color: InventarioColors.textOnPrimary, fontWeight: "800", fontSize: 15 },
   secondary: {
     borderRadius: 12,
     padding: 12,

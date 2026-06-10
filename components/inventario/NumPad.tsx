@@ -1,6 +1,8 @@
 import * as Haptics from 'expo-haptics';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { InventarioColors } from '@/constants/inventario-theme';
+
 type Props = {
   value: string;
   onChange: (value: string) => void;
@@ -9,7 +11,7 @@ type Props = {
 
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '⌫'];
 
-export function NumPad({ value, onChange, tint = '#E85D04' }: Props) {
+export function NumPad({ value, onChange, tint = InventarioColors.accent }: Props) {
   const pulse = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
   };
@@ -35,7 +37,7 @@ export function NumPad({ value, onChange, tint = '#E85D04' }: Props) {
           key={key}
           style={({ pressed }) => [
             styles.key,
-            pressed && { backgroundColor: '#2A2A2A' },
+            pressed && styles.keyPressed,
             key === '⌫' && styles.keyAccent,
           ]}
           onPress={() => onKey(key)}>
@@ -56,15 +58,19 @@ const styles = StyleSheet.create({
     width: '31%',
     minHeight: 56,
     borderRadius: 12,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: InventarioColors.surface,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: InventarioColors.border,
   },
+  keyPressed: { backgroundColor: InventarioColors.primarySoft },
   keyAccent: {
-    backgroundColor: '#2B1A10',
+    backgroundColor: InventarioColors.accentMuted,
+    borderColor: InventarioColors.accentSoft,
   },
   keyText: {
-    color: '#F5F5F5',
+    color: InventarioColors.text,
     fontSize: 24,
     fontWeight: '600',
   },

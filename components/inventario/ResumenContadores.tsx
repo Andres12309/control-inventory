@@ -24,14 +24,14 @@ export function ResumenContadores({
         label="Contados"
         value={contados}
         activo={filtroActivo === 'contados'}
-        color={InventarioColors.accent}
+        color={InventarioColors.primary}
         onPress={() => onFiltro(filtroActivo === 'contados' ? 'todos' : 'contados')}
       />
       <StatCard
         label="Pendientes"
         value={pendientes}
         activo={filtroActivo === 'pendientes'}
-        color={InventarioColors.warning}
+        color={InventarioColors.accent}
         onPress={() => onFiltro(filtroActivo === 'pendientes' ? 'todos' : 'pendientes')}
       />
       <StatCard
@@ -83,11 +83,11 @@ const styles = StyleSheet.create({
     borderColor: InventarioColors.border,
   },
   statActivo: {
-    borderColor: InventarioColors.accent,
-    backgroundColor: '#2B1A10',
+    borderColor: InventarioColors.primary,
+    backgroundColor: InventarioColors.activeBg,
   },
   statNum: { fontSize: 22, fontWeight: '800' },
   statLabel: { color: InventarioColors.textMuted, fontSize: 11, marginTop: 2, fontWeight: '600' },
-  statLabelActivo: { color: InventarioColors.accent },
-  filtroHint: { color: InventarioColors.accent, fontSize: 9, marginTop: 4, fontWeight: '700' },
+  statLabelActivo: { color: InventarioColors.primary },
+  filtroHint: { color: InventarioColors.primary, fontSize: 9, marginTop: 4, fontWeight: '700' },
 });
