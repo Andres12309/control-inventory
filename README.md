@@ -90,7 +90,9 @@ Catálogo importado desde Excel del ERP, optimizado para el lenguaje del mostrad
 
 | Capacidad | Detalle |
 |-----------|---------|
-| Búsqueda inteligente | Multi-palabra, sinónimos (`chev` → Chevrolet), tolerancia a errores |
+| **Búsqueda por voz** | Micrófono en el buscador (`es-EC`); corrige errores de STT (*vujía* → bujía) |
+| Búsqueda inteligente | Multi-palabra, sinónimos (`chev` → Chevrolet), fuzzy, modo relajado OR |
+| Chips rápidos | Atajos: *bujia*, *filtro aceite*, *pastilla freno*… |
 | Prioridad por nombre | El código ERP solo destaca cuando la búsqueda parece un código |
 | Filtros | Sin stock, stock bajo, favoritos, familia, marca |
 | Historial y recientes | Últimas búsquedas y productos vistos |
@@ -98,13 +100,17 @@ Catálogo importado desde Excel del ERP, optimizado para el lenguaje del mostrad
 | Detalle compacto | Grid 2 columnas: stock, ubicación, código de barras, etc. |
 | Copiar código ERP | Un toque al portapapeles con feedback háptico |
 
-Ejemplos de búsqueda:
+Ejemplos de búsqueda (texto o voz):
 
 ```
-chev filt aceit   →  Chevrolet + filtro + aceite
-bugia toy         →  bujía + Toyota
-12345-A           →  prioriza coincidencia por código ERP
+chev filt aceit        →  Chevrolet + filtro + aceite
+bugia toy              →  bujía + Toyota
+filtro de aceite aveo  →  se limpia a: filtro aceite aveo
+ocho chevrolet         →  número hablado → 8 chevrolet
+12345-A                →  prioriza coincidencia por código ERP
 ```
+
+> **Voz:** requiere APK con build nativo (`expo-speech-recognition`). En Expo Go puede no funcionar.
 
 ### Herramientas — operación diaria
 
@@ -161,8 +167,10 @@ Ramas: **`develop`** (trabajo diario) → **`main`** (estable / producción).
 | Acción | Qué pasa |
 |--------|----------|
 | Push a `develop` con `EAS update: …` en el commit | Publica OTA al canal `preview` |
+| Push a `develop` **sin** `EAS update:` | Solo sube código, **no** publica OTA |
 | PR abierto o actualizado hacia `main` | Build Android APK (perfil `preview`) |
 | Abrir la app (APK) con OTA disponible | Alerta → **Aceptar** → descarga y reinicio |
+| Cambios nativos (voz, permisos, `app.json`) | Requieren **build nuevo**, no solo OTA |
 
 ### Workflows EAS
 
@@ -243,11 +251,14 @@ Alias automáticos: `codpro`, `stock real`, `cod.barra`…
 
 | Archivo | Rol |
 |---------|-----|
-| `search-synonyms.ts` | Abreviaciones y sinónimos del mostrador |
+| `search-query.ts` | Limpia consultas: muletillas, números hablados, frases, correcciones de voz |
+| `search-synonyms.ts` | Abreviaciones y sinónimos del mostrador (marcas y piezas) |
 | `tokenize.ts` | Normalización e índice al importar |
-| `search-engine.ts` | Multi-palabra, fuzzy, ranking |
+| `search-engine.ts` | Multi-palabra, fuzzy, ranking, tokens en paralelo, fallback OR |
 | `search-analytics.ts` | Productos más consultados |
 | `db-queue.ts` | Cola SQLite estable en Android |
+
+Componentes UI: `BusquedaAlmacenBar.tsx` · hook `use-almacen-voice-search.ts`
 
 ---
 
@@ -279,8 +290,11 @@ control-inventario/
 ├── components/
 │   ├── app/AppSplash.tsx     # Splash animado de marca
 │   ├── almacen/
+│   │   └── BusquedaAlmacenBar.tsx  # Buscador + micrófono + chips
 │   ├── herramientas/
 │   └── inventario/
+├── hooks/
+│   └── use-almacen-voice-search.ts
 ├── lib/
 │   ├── almacen/              # Motor búsqueda ERP
 │   ├── db/                   # SQLite inventario
@@ -303,6 +317,7 @@ control-inventario/
 | Excel | xlsx |
 | Sync LAN | Express + JSON local (`sync-server/`) |
 | Releases | EAS Build + EAS Update |
+| Voz | expo-speech-recognition (búsqueda por micrófono) |
 | UX | Reanimated · expo-haptics · expo-clipboard · expo-image |
 
 ---
