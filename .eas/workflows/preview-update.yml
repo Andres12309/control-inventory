@@ -1,9 +1,16 @@
+# Publica OTA al canal preview en develop solo si el commit incluye "EAS update:".
+# Docs: https://docs.expo.dev/eas/workflows/examples/publish-preview-update/
+#
+# Ejemplo de commit: EAS update: mejoras en búsqueda del almacén
+#
+# Ejecutar manual: eas workflow:run .eas/workflows/preview-update.yml
+
 name: Preview — EAS Update (canal preview, Android)
 
 on:
   push:
     branches:
-      - main
+      - develop
     paths:
       - "**"
       - "!**/*.md"
@@ -20,6 +27,7 @@ on:
 jobs:
   publish_preview_update:
     name: Publicar OTA Android (preview)
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.commit_message, 'EAS update:') }}
     type: update
     params:
       channel: preview
