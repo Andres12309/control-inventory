@@ -54,6 +54,14 @@
             "usesCleartextTraffic": true
           }
         }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Puyo-Motors usa el micrófono para buscar repuestos por voz en el almacén.",
+          "speechRecognitionPermission": "Puyo-Motors usa reconocimiento de voz para encontrar productos más rápido.",
+          "androidSpeechServicePackages": ["com.google.android.googlequicksearchbox"]
+        }
       ]
     ],
     "experiments": {

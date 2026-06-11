@@ -17,10 +17,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { BusquedaAlmacenBar } from "@/components/almacen/BusquedaAlmacenBar";
 import { EstadisticasAlmacenPanel } from "@/components/almacen/EstadisticasAlmacen";
 import { FiltrosAlmacen } from "@/components/almacen/FiltrosAlmacen";
 import { ProductoAlmacenCard } from "@/components/almacen/ProductoAlmacenCard";
 import { InventarioColors } from "@/constants/inventario-theme";
+import { useAlmacenVoiceSearch } from "@/hooks/use-almacen-voice-search";
 import { runAlmacenDb } from "@/lib/almacen/db-queue";
 import {
   elegirArchivoErp,
@@ -82,6 +84,45 @@ export default function AlmacenScreen() {
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false);
   const [extrasAbiertos, setExtrasAbiertos] = useState(true);
   const buscarSeq = useRef(0);
+  const queryRef = useRef(query);
+  queryRef.current = query;
+
+  const aplicarBusquedaVoz = useCallback(
+    async (texto: string) => {
+      setQuery(texto);
+      queryRef.current = texto;
+      if (texto.trim().length >= 2) {
+        await registrarBusquedaAlmacen(db, texto);
+        setHistorial(await listHistorialBusqueda(db, 6));
+      }
+      const seq = ++buscarSeq.current;
+      setLoading(true);
+      try {
+        const lista = await buscarProductosAlmacen(db, {
+          query: texto,
+          familia: familiaSel,
+          marca: marcaSel,
+          filtro,
+          limit: 80,
+        });
+        if (seq !== buscarSeq.current) return;
+        const favs = await runAlmacenDb(() => listFavoritosAlmacen(db));
+        if (seq !== buscarSeq.current) return;
+        setItems(lista);
+        setFavoritos(new Set(favs.map((p) => p.codigo)));
+      } finally {
+        if (seq === buscarSeq.current) setLoading(false);
+      }
+    },
+    [db, familiaSel, filtro, marcaSel],
+  );
+
+  const voice = useAlmacenVoiceSearch({
+    onFinalQuery: (texto) => {
+      void aplicarBusquedaVoz(texto);
+    },
+    onPartialQuery: (texto) => setQuery(texto),
+  });
 
   const hayFiltroAvanzado =
     filtro !== "todos" || familiaSel != null || marcaSel != null;
@@ -132,7 +173,7 @@ export default function AlmacenScreen() {
   );
 
   useEffect(() => {
-    const delay = query.trim() ? 280 : 0;
+    const delay = query.trim() ? 200 : 0;
     const t = setTimeout(buscar, delay);
     return () => clearTimeout(t);
   }, [query, familiaSel, marcaSel, filtro, buscar]);
@@ -317,16 +358,18 @@ export default function AlmacenScreen() {
       </Modal>
 
       <View style={styles.topBar}>
-        <TextInput
-          style={styles.search}
-          placeholder="Nombre, marca, familia… (ej: bujia 8, filtro aveo)"
-          placeholderTextColor={InventarioColors.textMuted}
-          value={query}
-          onChangeText={setQuery}
-          autoCapitalize="none"
-          autoCorrect={false}
-          returnKeyType="search"
-          onSubmitEditing={onSubmitBusqueda}
+        <BusquedaAlmacenBar
+          query={query}
+          onChangeQuery={setQuery}
+          onSubmit={onSubmitBusqueda}
+          listening={voice.listening}
+          voicePartial={voice.partial}
+          voiceAvailable={voice.available}
+          onToggleVoice={voice.toggle}
+          onSuggestion={(texto) => {
+            setQuery(texto);
+            void aplicarBusquedaVoz(texto);
+          }}
         />
 
         <View style={styles.toolbar}>
@@ -569,16 +612,6 @@ const styles = StyleSheet.create({
     backgroundColor: InventarioColors.bg,
     borderBottomWidth: 1,
     borderBottomColor: InventarioColors.borderLight,
-  },
-  search: {
-    backgroundColor: InventarioColors.surface,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    color: InventarioColors.text,
-    borderWidth: 1,
-    borderColor: InventarioColors.border,
-    fontSize: 15,
   },
   toolbar: {
     flexDirection: "row",
