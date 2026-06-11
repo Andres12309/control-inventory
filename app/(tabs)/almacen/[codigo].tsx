@@ -100,20 +100,23 @@ export default function AlmacenDetalleScreen() {
           </View>
         ) : null}
 
+        <Text style={styles.seccion}>Stock</Text>
         <View style={styles.grid}>
-          <Campo label="Familia" value={producto.familia} />
-          <Campo label="Marca" value={producto.marca} />
+          <Campo label="Real" value={String(producto.stock_real)} destacado />
+          <Campo label="Disponible" value={String(producto.stock_disp)} destacado />
+          <Campo label="Mínimo" value={String(producto.stock_minimo)} />
+          <Campo label="Máximo" value={String(producto.stock_maximo)} />
+        </View>
+
+        <Text style={styles.seccion}>Datos</Text>
+        <View style={styles.grid}>
           <Campo label="Línea" value={producto.linea} />
           <Campo label="U.M." value={producto.um} />
           <Campo label="Grupo tipo" value={producto.grupo_tipo} />
           <Campo label="Impuesto" value={producto.impuesto} />
-          <Campo label="Stock real" value={String(producto.stock_real)} destacado />
-          <Campo label="Stock disponible" value={String(producto.stock_disp)} destacado />
-          <Campo label="Stock mínimo" value={String(producto.stock_minimo)} />
-          <Campo label="Stock máximo" value={String(producto.stock_maximo)} />
-          <Campo label="Cód. barras" value={producto.cod_barra} />
           <Campo label="Ubicación" value={producto.ubicacion} />
           <Campo label="Activo" value={producto.activo ? 'Sí' : 'No'} />
+          <Campo label="Cód. barras" value={producto.cod_barra} ancho="completo" />
         </View>
 
         <View style={styles.erpBox}>
@@ -156,16 +159,22 @@ function Campo({
   label,
   value,
   destacado,
+  ancho = 'mitad',
 }: {
   label: string;
   value: string | null | undefined;
   destacado?: boolean;
+  ancho?: 'mitad' | 'completo';
 }) {
   if (value == null || value === '') return null;
   return (
-    <View style={styles.campo}>
+    <View style={[styles.campo, ancho === 'completo' && styles.campoCompleto]}>
       <Text style={styles.campoLabel}>{label}</Text>
-      <Text style={[styles.campoVal, destacado && styles.campoDestacado]}>{value}</Text>
+      <Text
+        style={[styles.campoVal, destacado && styles.campoDestacado]}
+        numberOfLines={ancho === 'completo' ? 2 : 1}>
+        {value}
+      </Text>
     </View>
   );
 }
@@ -212,7 +221,20 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 8,
   },
-  grid: { marginTop: 16, gap: 12 },
+  seccion: {
+    color: InventarioColors.textMuted,
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginTop: 14,
+    marginBottom: 8,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
   erpBox: {
     marginTop: 20,
     backgroundColor: InventarioColors.surfaceAlt,
@@ -241,15 +263,23 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   campo: {
+    width: '48%',
+    flexGrow: 1,
+    minWidth: '46%',
     backgroundColor: InventarioColors.surface,
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     borderWidth: 1,
     borderColor: InventarioColors.border,
   },
-  campoLabel: { color: InventarioColors.textMuted, fontSize: 11, textTransform: 'uppercase' },
-  campoVal: { color: InventarioColors.text, fontSize: 15, fontWeight: '600', marginTop: 4 },
-  campoDestacado: { color: InventarioColors.primary, fontSize: 22, fontWeight: '800' },
+  campoCompleto: {
+    width: '100%',
+    minWidth: '100%',
+  },
+  campoLabel: { color: InventarioColors.textMuted, fontSize: 10, textTransform: 'uppercase' },
+  campoVal: { color: InventarioColors.text, fontSize: 14, fontWeight: '600', marginTop: 2 },
+  campoDestacado: { color: InventarioColors.primary, fontSize: 18, fontWeight: '800' },
   primary: {
     marginTop: 24,
     backgroundColor: InventarioColors.accent,

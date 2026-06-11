@@ -1,3 +1,8 @@
+# Build nativo Android (perfil preview) al abrir/actualizar un PR hacia main.
+# Docs: https://docs.expo.dev/eas/workflows/get-started/
+#
+# Ejecutar manual: eas workflow:run .eas/workflows/preview-build.yml
+
 name: Preview — EAS Build Android (perfil preview)
 
 on:
@@ -8,9 +13,13 @@ on:
         required: false
         description: Mensaje del build (solo ejecución manual)
         default: "Preview build Android"
-  push:
-    tags:
-      - "preview-v*"
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 jobs:
   build_android:
@@ -19,4 +28,4 @@ jobs:
     params:
       platform: android
       profile: preview
-      message: ${{ inputs.message || github.commit_message || 'Preview build Android' }}
+      message: ${{ inputs.message || github.event.pull_request.title || github.commit_message || 'Preview build Android' }}

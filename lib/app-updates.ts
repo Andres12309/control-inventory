@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 import * as Updates from 'expo-updates';
-import { Platform } from 'react-native';
+import { Alert, Platform } from 'react-native';
 
 export type BuildInfo = {
   appVersion: string;
@@ -122,4 +122,69 @@ export async function downloadAndApplyOtaUpdate(): Promise<{ ok: boolean; messag
 
 export async function reloadApp(): Promise<void> {
   await Updates.reloadAsync();
+}
+
+export function isOtaSupported(): boolean {
+  return Constants.appOwnership !== 'expo' && Updates.isEnabled;
+}
+
+let startupUpdateCheck: Promise<boolean> | null = null;
+
+/** Inicia la comprobación en paralelo (p. ej. durante el splash). */
+export function beginStartupUpdateCheck(): Promise<boolean> {
+  if (startupUpdateCheck) return startupUpdateCheck;
+
+  startupUpdateCheck = (async () => {
+    if (!isOtaSupported()) return false;
+    try {
+      const result = await Updates.checkForUpdateAsync();
+      return result.isAvailable;
+    } catch {
+      return false;
+    }
+  })();
+
+  return startupUpdateCheck;
+}
+
+/** Si hay update pendiente, pide Aceptar → descarga → reinicio. */
+export async function promptStartupUpdateIfAvailable(): Promise<void> {
+  const available = await beginStartupUpdateCheck();
+  if (!available) return;
+
+  try {
+    await new Promise<void>((resolve) => {
+      Alert.alert(
+        'Actualización disponible',
+        'Hay una versión nueva de la aplicación. Pulsa Aceptar para descargarla e instalarla. La app se reiniciará automáticamente.',
+        [
+          {
+            text: 'Aceptar',
+            onPress: () => {
+              void (async () => {
+                try {
+                  const fetched = await Updates.fetchUpdateAsync();
+                  if (fetched.isNew) {
+                    await Updates.reloadAsync();
+                  }
+                } catch (e) {
+                  Alert.alert(
+                    'No se pudo actualizar',
+                    e instanceof Error
+                      ? e.message
+                      : 'Error al descargar la actualización. Inténtalo más tarde.',
+                  );
+                } finally {
+                  resolve();
+                }
+              })();
+            },
+          },
+        ],
+        { cancelable: false },
+      );
+    });
+  } catch {
+    // Sin red o servidor: continuar sin bloquear el arranque.
+  }
 }

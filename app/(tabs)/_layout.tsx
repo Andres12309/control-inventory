@@ -31,7 +31,7 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="almacen"
+        name="index"
         options={{
           title: "Almacén",
           headerShown: false,
@@ -52,6 +52,12 @@ export default function TabLayout() {
               color={color}
             />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="almacen"
+        options={{
+          href: null,
         }}
       />
     </Tabs>
