@@ -15,6 +15,7 @@ import {
   tokenizeQuery,
   wordsFromTextoBusqueda,
 } from "@/lib/almacen/tokenize";
+import { preprocessSearchQuery } from "@/lib/almacen/search-query";
 import type {
   BusquedaAlmacenOptions,
   FiltroAlmacenRapido,
@@ -154,11 +155,18 @@ function intersectSets(sets: Set<string>[]): Set<string> {
   return result;
 }
 
+function minTokensRequired(tokenCount: number, relaxed: boolean): number {
+  if (!relaxed) return tokenCount;
+  if (tokenCount <= 1) return 1;
+  return Math.max(1, Math.ceil(tokenCount * 0.66));
+}
+
 function scoreProducto(
   producto: ProductoAlmacen,
   queryNorm: string,
   tokens: string[],
   expanded: string[][],
+  relaxed = false,
 ): number {
   const words = wordsFromTextoBusqueda(producto.texto_busqueda);
   const wordSet = new Set(words);
@@ -215,7 +223,7 @@ function scoreProducto(
 
   score += scoreNumberTokens(tokens, words, producto.texto_busqueda);
 
-  if (matchedGroups < tokens.length) {
+  if (matchedGroups < minTokensRequired(tokens.length, relaxed)) {
     return 0;
   }
 
@@ -307,12 +315,20 @@ async function buscarPorCodigoDirecto(
   return rows.map((r) => r.codigo);
 }
 
+function unionSets(sets: Set<string>[]): Set<string> {
+  const out = new Set<string>();
+  for (const set of sets) {
+    for (const codigo of set) out.add(codigo);
+  }
+  return out;
+}
+
 export async function resolverCodigosInteligente(
   db: SQLiteDatabase,
   query: string,
   limit: number,
 ): Promise<ScoredCodigo[]> {
-  const trimmed = query.trim();
+  const trimmed = preprocessSearchQuery(query);
   if (!trimmed) return [];
 
   const normQuery = normalizeSearchText(trimmed);
@@ -333,19 +349,19 @@ export async function resolverCodigosInteligente(
   }
 
   const expanded = expandQueryTokens(tokens);
-  const sets: Set<string>[] = [];
-
-  for (let i = 0; i < tokens.length; i++) {
-    const set = await resolverCodigosPorToken(
-      db,
-      tokens[i],
-      expanded[i],
-      CANDIDATE_POOL,
-    );
-    sets.push(set);
-  }
+  const sets = await Promise.all(
+    tokens.map((token, i) =>
+      resolverCodigosPorToken(db, token, expanded[i], CANDIDATE_POOL),
+    ),
+  );
 
   let codigos = [...intersectSets(sets)];
+  let relaxed = false;
+
+  if (codigos.length < 12 && tokens.length >= 2) {
+    codigos = [...unionSets(sets)];
+    relaxed = true;
+  }
 
   if (codigos.length === 0) {
     const fallback = await db.getAllAsync<{
@@ -399,7 +415,7 @@ export async function resolverCodigosInteligente(
 
   const scored = productos
     .map((p) => {
-      let score = scoreProducto(p, normQuery, tokens, expanded);
+      let score = scoreProducto(p, normQuery, tokens, expanded, relaxed);
       const consultas = popularidad.get(p.codigo) ?? 0;
       score += popularidadBoost(consultas);
       return { codigo: p.codigo, score };
