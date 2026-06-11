@@ -5,83 +5,123 @@
 <h1 align="center">Puyo-Motors</h1>
 
 <p align="center">
-  <strong>Inventario y consulta de almacén para autorepuestos — rápido, offline y listo para el piso de venta.</strong>
+  <strong>Inventario y consulta de almacén para autorepuestos — rápido, offline y listo para el mostrador.</strong>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Expo-54-000020?style=for-the-badge&logo=expo&logoColor=white" alt="Expo 54" />
   <img src="https://img.shields.io/badge/React_Native-0.81-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React Native" />
   <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/SQLite-offline-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite offline" />
-  <img src="https://img.shields.io/badge/OTA-EAS_Updates-000020?style=for-the-badge&logo=expo&logoColor=white" alt="EAS Updates" />
+  <img src="https://img.shields.io/badge/SQLite-offline-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite" />
+  <img src="https://img.shields.io/badge/EAS_Update-OTA-000020?style=for-the-badge&logo=expo&logoColor=white" alt="EAS Update" />
+</p>
+
+<p align="center">
+  <a href="#qué-es">Qué es</a> ·
+  <a href="#módulos">Módulos</a> ·
+  <a href="#inicio-rápido">Inicio rápido</a> ·
+  <a href="#ci--releases">CI / Releases</a> ·
+  <a href="#sincronización-lan">Sync LAN</a> ·
+  <a href="#estructura">Estructura</a>
 </p>
 
 ---
 
-## ¿Qué es?
+## Qué es
 
-**Puyo-Motors** es una app móvil pensada para tiendas de repuestos que necesitan dos cosas a la vez:
+**Puyo-Motors** es una app móvil para tiendas de repuestos que combina dos mundos en un solo APK:
 
-1. **Consultar el catálogo del ERP en el mostrador** — búsqueda inteligente por nombre, marca, familia o código, sin depender de internet.
-2. **Hacer inventario físico en el local** — conteo por código de fabricante, venta rápida en jornada activa, sincronización entre varios teléfonos por WiFi y exportación a Excel.
+| Módulo | Para qué |
+|--------|----------|
+| **Almacén** | Consultar el catálogo del ERP en el mostrador (búsqueda inteligente, sin internet) |
+| **Herramientas** | Inventario físico, conteo, ventas en jornada, familias, Excel y sync entre móviles |
 
-Todo vive en el dispositivo con **SQLite**. La red local solo entra cuando quieres **fusionar conteos** entre móviles; no hay nube obligatoria.
+Los datos viven en **SQLite** en el teléfono. La red solo se usa para **fusionar inventarios** entre varios dispositivos en la WiFi del local, o para **actualizaciones OTA** vía EAS.
+
+### Arquitectura
 
 ```mermaid
 flowchart LR
-  subgraph movil ["📱 App móvil"]
-    A[Almacén ERP]
-    B[Catálogo inventario]
-    C[Conteo / Ventas]
-    DB[(SQLite local)]
+  subgraph movil [App movil]
+    A[Almacen ERP]
+    B[Catalogo inventario]
+    C[Conteo y ventas]
+    DB[(SQLite)]
     A --> DB
     B --> DB
     C --> DB
   end
 
-  subgraph lan ["🖥️ WiFi del local"]
-    S[Coordinador LAN<br/>Express + SQLite]
+  subgraph lan [WiFi del local]
+    S[Coordinador LAN]
   end
 
-  DB <-->|push / pull| S
   ERP[Excel ERP] -->|importar| A
-  INV[Excel inventario] -->|importar / exportar| B
+  INV[Excel inventario] -->|importar| B
+  DB <-->|push y pull| S
+```
+
+### Flujo de arranque
+
+```mermaid
+sequenceDiagram
+  participant U as Usuario
+  participant S as Splash animado
+  participant DB as SQLite
+  participant OTA as EAS Update
+
+  U->>S: Abre la app
+  S->>DB: Migraciones locales
+  S->>OTA: Comprueba update en paralelo
+  S->>U: Entra a Almacen
+  alt Hay OTA nuevo
+    OTA->>U: Alerta Aceptar
+    U->>OTA: Descarga y reinicio
+  end
 ```
 
 ---
 
-## Módulos principales
+## Módulos
 
-### Almacén — consulta del ERP
+### Almacén — consulta ERP
 
-El catálogo completo del ERP, importado desde Excel, optimizado para **encontrar piezas en segundos**:
+Catálogo importado desde Excel del ERP, optimizado para el lenguaje del mostrador:
 
-| Capacidad             | Detalle                                                                                       |
-| --------------------- | --------------------------------------------------------------------------------------------- |
-| Búsqueda inteligente  | Multi-palabra, sinónimos (`chev` → Chevrolet, `filt` → filtro), tolerancia a errores de tipeo |
-| Prioridad por nombre  | La descripción manda; el código ERP solo destaca cuando la búsqueda parece un código          |
-| Filtros rápidos       | Sin stock, stock bajo, favoritos, por familia y marca                                         |
-| Historial y recientes | Últimas búsquedas y productos vistos                                                          |
-| Estadísticas          | Top productos, marcas y familias más consultadas                                              |
-| Copiar código         | Un toque al portapapeles con feedback háptico                                                 |
-| Header adaptable      | Botón de importación que se ajusta al ancho de pantalla                                       |
+| Capacidad | Detalle |
+|-----------|---------|
+| Búsqueda inteligente | Multi-palabra, sinónimos (`chev` → Chevrolet), tolerancia a errores |
+| Prioridad por nombre | El código ERP solo destaca cuando la búsqueda parece un código |
+| Filtros | Sin stock, stock bajo, favoritos, familia, marca |
+| Historial y recientes | Últimas búsquedas y productos vistos |
+| Estadísticas | Top productos, marcas y familias consultadas |
+| Detalle compacto | Grid 2 columnas: stock, ubicación, código de barras, etc. |
+| Copiar código ERP | Un toque al portapapeles con feedback háptico |
+
+Ejemplos de búsqueda:
+
+```
+chev filt aceit   →  Chevrolet + filtro + aceite
+bugia toy         →  bujía + Toyota
+12345-A           →  prioriza coincidencia por código ERP
+```
 
 ### Herramientas — operación diaria
 
-| Sección      | Para qué sirve                                                                       |
-| ------------ | ------------------------------------------------------------------------------------ |
-| **Catálogo** | Alta, edición y búsqueda del inventario físico; vista tabla o tarjetas               |
-| **Familias** | Categorías configurables (Frenos, Motor, Lubricantes…)                               |
-| **Ajustes**  | Importar/exportar Excel, sincronizar LAN, jornada de inventario, actualizaciones OTA |
+| Sección | Función |
+|---------|---------|
+| **Catálogo** | Alta, edición, búsqueda; vista tabla o tarjetas |
+| **Familias** | Categorías (Frenos, Motor, Lubricantes…) |
+| **Ajustes** | Excel, sync LAN, jornada, venta rápida, info OTA |
 
-### Flujos de trabajo
+### Flujos clave
 
-| Flujo                | Ruta rápida                                                             |
-| -------------------- | ----------------------------------------------------------------------- |
-| Conteo físico        | Catálogo → código → editar stock, costo y PVP → _Guardar y otro código_ |
-| Venta en jornada     | Iniciar jornada → **Venta rápida** → descuenta stock al vuelo           |
-| Varios teléfonos     | PC con coordinador LAN + IP en Ajustes → _Sincronizar ahora_            |
-| Cierre de inventario | Ajustes → _Exportar inventario (.xlsx)_                                 |
+| Flujo | Cómo |
+|-------|------|
+| Conteo físico | Catálogo → código → stock / costo / PVP → _Guardar y otro código_ |
+| Venta en jornada | Iniciar jornada → **Venta rápida** |
+| Varios teléfonos | `npm run sync-server` en PC + IP en Ajustes → _Sincronizar_ |
+| Cierre | Ajustes → _Exportar inventario (.xlsx)_ |
 
 ---
 
@@ -90,116 +130,136 @@ El catálogo completo del ERP, importado desde Excel, optimizado para **encontra
 ### Requisitos
 
 - Node.js 18+
-- [Expo Go](https://expo.dev/go) en Android/iOS **o** build EAS (recomendado para sincronización LAN en iOS)
+- Android: **APK EAS** (recomendado) o [Expo Go](https://expo.dev/go) para desarrollo
+- iOS: Expo Go o build EAS (sync LAN requiere build nativo)
 
 ### Instalación
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/Andres12309/control-inventory.git
 cd control-inventario
 npm install
 npx expo start
 ```
 
-Escanea el QR con **Expo Go** o pulsa `a` / `i` para emulador.
+### Scripts
 
-### Build y actualizaciones OTA
+| Comando | Descripción |
+|---------|-------------|
+| `npx expo start` | Dev server + QR |
+| `npm run android` | Emulador / dispositivo Android |
+| `npm run ios` | Simulador iOS |
+| `npm run sync-server` | Coordinador LAN en el PC |
+| `npm run lint` | ESLint |
 
-El proyecto usa **EAS Update** con `runtimeVersion: appVersion` y el canal `preview` definido en `eas.json`.
+---
 
-| Workflow         | Archivo                             | Cuándo                                                       |
-| ---------------- | ----------------------------------- | ------------------------------------------------------------ |
-| **OTA (JS)**     | `.eas/workflows/preview-update.yml` | Push a `develop` con commit `EAS update: …` o manual         |
-| **Build nativo** | `.eas/workflows/preview-build.yml`  | PR hacia `main` (abierto/actualizado) o manual               |
+## CI / Releases
 
-Requisitos para que corran solos en cada push: repo conectado a EAS y workflows habilitados en [expo.dev](https://expo.dev). Si no, ejecútalos a mano:
+Ramas: **`develop`** (trabajo diario) → **`main`** (estable / producción).
+
+| Acción | Qué pasa |
+|--------|----------|
+| Push a `develop` con `EAS update: …` en el commit | Publica OTA al canal `preview` |
+| PR abierto o actualizado hacia `main` | Build Android APK (perfil `preview`) |
+| Abrir la app (APK) con OTA disponible | Alerta → **Aceptar** → descarga y reinicio |
+
+### Workflows EAS
+
+| Workflow | Archivo | Trigger |
+|----------|---------|---------|
+| OTA | `.eas/workflows/preview-update.yml` | Push `develop` + mensaje `EAS update:` |
+| Build | `.eas/workflows/preview-build.yml` | PR hacia `main` |
+
+Ejemplo de commit para publicar OTA en preview:
+
+```bash
+git commit -m "EAS update: mejora detalle de almacen"
+git push origin develop
+```
+
+Manual:
 
 ```bash
 eas workflow:run .eas/workflows/preview-update.yml
 eas workflow:run .eas/workflows/preview-build.yml
 ```
 
-> `environment: preview` en un job de workflow es el **entorno de variables de EAS** (secrets del dashboard), no el canal OTA. El canal se define en `params.channel: preview`.
+Build local:
+
+```bash
+eas build --platform android --profile preview
+eas update --channel preview --message "Hotfix mostrador"
+```
+
+> Repo conectado a [expo.dev](https://expo.dev) · `runtimeVersion: appVersion` · canal `preview` en `eas.json`
 
 ---
 
-## Sincronización LAN (sin nube)
+## Sincronización LAN
 
-En un PC conectado al **mismo WiFi** del local:
+En un PC en la **misma WiFi** del local:
 
 ```bash
 npm run sync-server
 ```
 
-La consola muestra URLs como `http://192.168.1.50:8787`. En cada móvil:
+En cada móvil: **Herramientas → Ajustes → IP del coordinador → Sincronizar ahora**
 
-**Herramientas → Ajustes → IP del coordinador → Sincronizar ahora**
-
-El servidor fusiona conteos por producto usando `updated_at` — **gana el registro más reciente**.
+El coordinador fusiona por `updated_at` — gana el registro más reciente.
 
 ```mermaid
 sequenceDiagram
-  participant M1 as Móvil A
-  participant M2 as Móvil B
-  participant S as Coordinador LAN
+  participant M1 as Movil A
+  participant M2 as Movil B
+  participant S as Coordinador
 
-  M1->>S: POST /api/sync/push
-  M2->>S: POST /api/sync/push
-  M1->>S: GET /api/sync/pull
-  M2->>S: GET /api/sync/pull
-  Note over S: Fusiona por updated_at
+  M1->>S: POST push
+  M2->>S: POST push
+  M1->>S: GET pull
+  M2->>S: GET pull
+  Note over S: Fusion por updated_at
 ```
 
 ---
 
 ## Formatos Excel
 
-### Inventario físico (importar / exportar)
+### Inventario físico
 
-| Código de producto | Descripción de producto | Unidad de medida | Stock | Precio proveedor / Costo | Precio de venta al público | Marca | Familia |
-| ------------------ | ----------------------- | ---------------- | ----- | ------------------------ | -------------------------- | ----- | ------- |
+| Código | Descripción | U.M. | Stock | Costo | PVP | Marca | Familia |
+|--------|-------------|------|-------|-------|-----|-------|---------|
 
-Al importar se aceptan abreviaturas y variantes (`codpro`, `PRECIO PROV.`, etc.). `marca` y `familia` son opcionales.
+Variantes de encabezado aceptadas: `codpro`, `PRECIO PROV.`, etc.
 
-### Catálogo ERP (solo Almacén)
+### Catálogo ERP (Almacén)
 
-Columnas del export ERP: código, descripción, unidad, familia, marca, stocks, ubicación, código de barras y más. Los alias de encabezado se resuelven automáticamente (`codpro`, `stock real`, `cod.barra`…).
-
-> **Tip:** Tras reimportar el Excel del ERP se reconstruye el índice de tokens de búsqueda.
+Export del ERP: código, descripción, familia, marca, stocks, ubicación, código de barras…  
+Alias automáticos: `codpro`, `stock real`, `cod.barra`…
 
 ---
 
-## Motor de búsqueda del almacén
+## Motor de búsqueda (`lib/almacen/`)
 
-Diseñado para el lenguaje real del mostrador:
-
-```
-"chev filt aceit"  →  Chevrolet + filtro + aceite
-"bugia toy"        →  bujía + Toyota (sinónimos ortográficos)
-"12345-A"          →  prioriza coincidencia por código ERP
-```
-
-Piezas del motor (`lib/almacen/`):
-
-| Archivo               | Rol                                                      |
-| --------------------- | -------------------------------------------------------- |
-| `search-synonyms.ts`  | Diccionario de abreviaciones y sinónimos                 |
-| `tokenize.ts`         | Normalización, fragmentos y alias al importar            |
-| `search-engine.ts`    | Intersección multi-palabra, fuzzy, ranking y popularidad |
-| `search-analytics.ts` | Productos más consultados y vistos                       |
-| `db-queue.ts`         | Cola serializada SQLite (estable en Android)             |
+| Archivo | Rol |
+|---------|-----|
+| `search-synonyms.ts` | Abreviaciones y sinónimos del mostrador |
+| `tokenize.ts` | Normalización e índice al importar |
+| `search-engine.ts` | Multi-palabra, fuzzy, ranking |
+| `search-analytics.ts` | Productos más consultados |
+| `db-queue.ts` | Cola SQLite estable en Android |
 
 ---
 
 ## Paleta visual
 
-Identidad **Azul · Blanco · Rojo** — definida en `constants/inventario-theme.ts`:
+**Azul · Blanco · Rojo** — `constants/inventario-theme.ts`
 
-| Color            | Uso                                        |
-| ---------------- | ------------------------------------------ |
-| Azul `#1A4B8C`   | Marca, navegación, estados positivos       |
-| Blanco `#FFFFFF` | Superficies y tarjetas                     |
-| Rojo `#C41E3A`   | Acciones fuertes, ventas, alertas de stock |
+| Color | Hex | Uso |
+|-------|-----|-----|
+| Azul | `#1A4B8C` | Marca, navegación |
+| Blanco | `#FFFFFF` | Superficies |
+| Rojo | `#C41E3A` | Ventas, alertas, acentos |
 
 ---
 
@@ -207,62 +267,54 @@ Identidad **Azul · Blanco · Rojo** — definida en `constants/inventario-theme
 
 ```
 control-inventario/
-├── app/                    # Rutas Expo Router
+├── app/
+│   ├── _layout.tsx           # Splash, SQLite, OTA al arranque
 │   ├── (tabs)/
-│   │   ├── almacen/        # Consulta ERP + detalle producto
-│   │   └── herramientas/   # Catálogo, familias, ajustes
-│   ├── conteo/             # Pantalla de conteo por código
-│   ├── venta-rapida.tsx    # Ventas en jornada activa
+│   │   ├── index.tsx         # Tab Almacén (ruta /)
+│   │   ├── almacen/          # Detalle /almacen/[codigo]
+│   │   └── herramientas/     # Catálogo, familias, ajustes
+│   ├── conteo/[codpro].tsx
+│   ├── venta-rapida.tsx
 │   └── inventario-en-curso.tsx
 ├── components/
-│   ├── almacen/            # Tarjetas, filtros, estadísticas
-│   ├── herramientas/       # Paneles de herramientas
-│   └── inventario/         # Formularios y listas de producto
+│   ├── app/AppSplash.tsx     # Splash animado de marca
+│   ├── almacen/
+│   ├── herramientas/
+│   └── inventario/
 ├── lib/
-│   ├── almacen/            # Motor de búsqueda + repositorio ERP
-│   ├── db/                 # SQLite inventario + sync
-│   └── excel-*.ts          # Importación / exportación Excel
-├── sync-server/            # Coordinador LAN (Express)
-└── constants/              # Tema y configuración visual
+│   ├── almacen/              # Motor búsqueda ERP
+│   ├── db/                   # SQLite inventario
+│   ├── app-updates.ts        # OTA y info de build
+│   └── app-bootstrap.ts      # Arranque robusto
+├── sync-server/              # Coordinador Express (LAN)
+├── .eas/workflows/           # CI EAS
+└── constants/
 ```
 
 ---
 
-## Scripts
+## Stack
 
-| Comando                       | Descripción                            |
-| ----------------------------- | -------------------------------------- |
-| `npx expo start`              | Servidor de desarrollo y QR            |
-| `npm run android`             | Abrir en Android                       |
-| `npm run ios`                 | Abrir en iOS                           |
-| `npm run sync-server`         | Coordinador de inventario en red local |
-| `npm run sync-server:install` | Instalar dependencias del coordinador  |
-| `npm run lint`                | ESLint (config Expo)                   |
-
----
-
-## Stack tecnológico
-
-| Capa            | Tecnología                                                             |
-| --------------- | ---------------------------------------------------------------------- |
-| Framework       | [Expo SDK 54](https://docs.expo.dev/versions/v54.0.0/) + Expo Router 6 |
-| UI              | React Native 0.81 · React 19 · New Architecture                        |
-| Datos locales   | expo-sqlite                                                            |
-| Excel           | xlsx                                                                   |
-| Sync LAN        | Express + better-sqlite3                                               |
-| Actualizaciones | expo-updates + EAS                                                     |
-| UX              | expo-haptics · expo-clipboard · expo-document-picker                   |
+| Capa | Tecnología |
+|------|------------|
+| Framework | [Expo SDK 54](https://docs.expo.dev/versions/v54.0.0/) + Expo Router 6 |
+| UI | React Native 0.81 · React 19 · New Architecture |
+| Datos | expo-sqlite |
+| Excel | xlsx |
+| Sync LAN | Express + JSON local (`sync-server/`) |
+| Releases | EAS Build + EAS Update |
+| UX | Reanimated · expo-haptics · expo-clipboard · expo-image |
 
 ---
 
-## Flujo recomendado (primer día)
+## Primer día en la tienda
 
-1. **Familias** — revisa o crea categorías (Frenos, Suspensión, etc.).
-2. **Importar catálogo** — Excel de inventario en Ajustes, o productos uno a uno en Catálogo. Los códigos se guardan en **MAYÚSCULAS**.
-3. **Importar almacén ERP** — pestaña Almacén → _Importar Excel_ con el export del ERP.
-4. **Conteo** — filtra familia, escribe código; si no existe, _Crear y contar_.
-5. **Varios móviles** — levanta el coordinador LAN y sincroniza.
-6. **Cierre** — exporta el `.xlsx` y comparte el archivo.
+1. **Familias** — crea o revisa categorías.
+2. **Importar inventario** — Excel en Ajustes (códigos en MAYÚSCULAS).
+3. **Importar almacén ERP** — tab Almacén → _Importar Excel_.
+4. **Conteo** — código → stock; _Crear y contar_ si no existe.
+5. **Varios móviles** — coordinador LAN + sincronizar.
+6. **Cierre** — exportar `.xlsx`.
 
 ---
 
